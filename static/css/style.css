@@ -1,0 +1,69 @@
+:root {
+    --primary-blue: #3b99fc; 
+    --wireframe-border: 2px solid #000000;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: white; 
+    font-family: Arial, sans-serif;
+    border: var(--wireframe-border); 
+    min-height: 100vh; 
+}
+
+.navbar-custom {
+    background-color: var(--primary-blue);
+}
+.navbar-custom .navbar-brand, .navbar-custom .nav-link {
+    color: white !important;
+}
+
+.main-container {
+    background-color: transparent;
+    width: 100%;
+    padding: 0; 
+    border: none;
+}
+
+.content-padding {
+    padding: 2rem;
+}
+
+.movie-card {
+    border: 1px solid #333;
+    padding: 10px;
+    position: relative; 
+    margin-bottom: 20px;
+}
+
+.placeholder-img {
+    background-color: #b3b3b3;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.add-watchlist-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: #28a745; 
+    font-size: 1.2rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.movie-stats {
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
