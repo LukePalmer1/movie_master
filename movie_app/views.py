@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.http import HttpResponse
 
-from movie_app.models import UserProfile
+from movie_app.models import UserProfile, Rating
 
 def user_login(request):
     if request.user.is_authenticated:
@@ -58,3 +59,22 @@ def sign_up(request):
 
     context = {'registered': registered, 'error': error}
     return render(request, 'movie_app/signup.html', context)
+
+@login_required
+def user_logout(request):
+    #Log the user out and send them back to the homepage.
+    logout(request)
+    return redirect(reverse('movie_app:login'))
+
+@login_required
+def dashboard(request):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    ratings = Rating.objects.filter(user_profile=profile).select_related('movie')
+    watchlist = profile.watch_list.all()
+
+    context = {
+        'profile': profile,
+        'ratings': ratings,
+        'watchlist': watchlist,
+    }
+    return render(request, 'movie_app/dashboard.html', context)
