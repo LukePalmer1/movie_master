@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieMaster</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <div class="container-fluid p-0 main-container">
+        
+        <nav class="navbar navbar-expand-lg navbar-custom px-4">
+            <a class="navbar-brand fs-3" href="#">MovieMaster</a>
+            
+            <div class="collapse navbar-collapse d-flex justify-content-end">
+                {% if user.is_authenticated %}
+                    <form class="d-flex me-3">
+                        <input class="form-control me-2 form-control-sm" type="search" placeholder="Search movies..." aria-label="Search">
+                        <button class="btn btn-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
+                    </form>
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="#">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">All Movies</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">Profile</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:logout' %}">Sign Out</a></li>
+                    </ul>
+                {% else %}
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:login' %}">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:sign_up' %}">Sign Up</a></li>
+                    </ul>
+                {% endif %}
+            </div>
+        </nav>
+
+        <div class="content-padding">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+    </div>
+
+</body>
+</html>
