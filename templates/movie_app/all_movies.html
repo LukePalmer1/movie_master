@@ -1,0 +1,82 @@
+{% extends 'movie_app/base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-3 pb-5 d-flex flex-column" style="min-height: 100vh;">
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--primary-blue);">Browse All Movies</h2>
+            <p class="text-muted small mb-0">Discover and rate movies from the database.</p>
+        </div>
+        
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-start-0 ps-0" placeholder="Search movies...">
+            </div>
+            
+            <select class="form-select" style="width: 130px; overflow-y: auto; max-height: 200px;">
+                <option selected>All Years</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+                <option value="2020">2020</option>
+                <option value="2019">2019</option>
+                <option value="2018">2018</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+                <option value="2015">2015</option>
+                <option value="2014">2014</option>
+                <option value="2013">2013</option>
+                <option value="2012">2012</option>
+                <option value="2011">2011</option>
+                <option value="2010">2010</option>
+                <option value="2009">2009</option>
+                <option value="older">Older...</option>
+            </select>
+        </div>
+    </div>
+
+    <hr class="mb-4">
+
+    <div class="d-flex flex-wrap justify-content-center flex-grow-1" style="gap: 20px;">
+        
+        {% for i in "1234567890123456" %}
+        <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
+            <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
+                <img src="https://placehold.co/300x450/e9ecef/495057?text=Poster" alt="Movie Poster placeholder" class="w-100 h-100" style="object-fit: cover;">
+                <button class="btn btn-light rounded-circle position-absolute shadow-sm d-flex align-items-center justify-content-center" style="top: 8px; right: 8px; width: 30px; height: 30px; border: 1px solid #ccc; padding: 0;">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+            <div class="card-body p-2 d-flex flex-column">
+                <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">[Movie Title]</p>
+                <div class="d-flex align-items-center mt-1 mb-1">
+                    <i class="bi bi-star-fill text-warning me-1" style="font-size: 0.8rem;"></i>
+                    <small class="fw-bold me-1">[0.0]</small>
+                    <small class="text-muted" style="font-size: 0.75rem;">([Count])</small>
+                </div>
+                <p class="text-muted mb-0" style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    [Movie overview fetched from the API will be here.]
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+    
+    <nav class="mt-5 pb-5 w-100 d-flex justify-content-center">
+        <ul class="pagination shadow-sm">
+            <li class="page-item disabled"><a class="page-link text-secondary" href="#">Previous</a></li>
+            <li class="page-item active"><a class="page-link" href="#" style="background-color: var(--primary-blue); border-color: var(--primary-blue);">1</a></li>
+            <li class="page-item"><a class="page-link text-dark" href="#">2</a></li>
+            <li class="page-item"><a class="page-link text-dark" href="#">3</a></li>
+            <li class="page-item disabled"><span class="page-link text-secondary">...</span></li>
+            <li class="page-item"><a class="page-link text-dark" href="#">428</a></li>
+            <li class="page-item"><a class="page-link text-dark" href="#">Next</a></li>
+        </ul>
+    </nav>
+    
+</div>
+{% endblock %}
