@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.http import HttpResponse
 
-from movie_app.models import UserProfile, Rating
+from movie_app.models import UserProfile, Rating, Movie
 
 def user_login(request):
     if request.user.is_authenticated:
@@ -78,3 +78,23 @@ def dashboard(request):
         'watchlist': watchlist,
     }
     return render(request, 'movie_app/dashboard.html', context)
+
+def all_movies(request):
+    movies = Movie.objects.all()
+
+    query = request.GET.get('q', '').strip()
+    if query:
+        movies = movies.filter(title__icontains=query)
+
+    year = request.GET.get('year', '').strip()
+    if year:
+        movies = movies.filter(release_date__startswith=year)
+
+    movies = movies.order_by('title')
+
+    context = {
+        'movies': movies,
+        'query': query,
+        'year': year,
+    }
+    return render(request, 'movie_app/all_movies.html', context)
