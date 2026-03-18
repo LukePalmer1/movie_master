@@ -117,13 +117,18 @@
                         
                         <div class="mb-3 d-flex align-items-center">
                             <label class="fw-bold me-3 small">Update Rating:</label>
-                            <select class="form-select form-select-sm w-auto rounded-0" style="border: 1px solid #000;">
-                                <option value="5">5 Stars</option>
-                                <option value="4">4 Stars</option>
-                                <option value="3">3 Stars</option>
-                                <option value="2">2 Stars</option>
-                                <option value="1">1 Star</option>
-                            </select>
+                            
+                            <div id="interactive-rating" class="text-warning fs-5" style="cursor: pointer; display: inline-block;">
+                                <i class="bi bi-star"></i>
+                                <i class="bi bi-star"></i>
+                                <i class="bi bi-star"></i>
+                                <i class="bi bi-star"></i>
+                                <i class="bi bi-star"></i>
+                            </div>
+                            
+                            <input type="hidden" name="rating" id="rating-input" value="0">
+                            
+                            <span id="rating-display" class="ms-3 fw-bold text-muted small">0 / 5</span>
                         </div>
                         
                         <div class="mb-4">
@@ -141,6 +146,52 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ratingContainer = document.getElementById('interactive-rating');
+            if (ratingContainer) {
+                const stars = ratingContainer.querySelectorAll('i');
+                const ratingInput = document.getElementById('rating-input');
+                const ratingDisplay = document.getElementById('rating-display');
+
+                function updateStarVisuals(value) {
+                    stars.forEach((star, index) => {
+                        star.className = 'bi text-warning '; 
+                        if (value >= index + 1) {
+                            star.className += 'bi-star-fill'; 
+                        } else if (value >= index + 0.5) {
+                            star.className += 'bi-star-half'; 
+                        } else {
+                            star.className += 'bi-star';      
+                        }
+                    });
+                }
+
+                stars.forEach((star, index) => {
+                    star.addEventListener('mousemove', function(e) {
+                        const rect = star.getBoundingClientRect();
+                        const isHalf = (e.clientX - rect.left) < (rect.width / 2);
+                        const hoverValue = index + (isHalf ? 0.5 : 1);
+                        updateStarVisuals(hoverValue);
+                    });
+
+                    star.addEventListener('click', function(e) {
+                        const rect = star.getBoundingClientRect();
+                        const isHalf = (e.clientX - rect.left) < (rect.width / 2);
+                        const finalValue = index + (isHalf ? 0.5 : 1);
+                        
+                        ratingInput.value = finalValue; 
+                        ratingDisplay.innerText = finalValue + ' / 5'; 
+                    });
+                });
+
+                ratingContainer.addEventListener('mouseleave', function() {
+                    updateStarVisuals(parseFloat(ratingInput.value));
+                });
+            }
+        });
+    </script>
 
 </div>
 {% endblock %}
