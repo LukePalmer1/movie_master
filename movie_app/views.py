@@ -5,61 +5,58 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.http import HttpResponse
 
+from movie_app.forms import UserForm, UserProfileForm
 from movie_app.models import UserProfile, Rating, Movie
 
 def user_login(request):
-    if request.user.is_authenticated:
-        return redirect(reverse('movie_app:dashboard'))
-
+    error = None
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         user = authenticate(username=username, password=password)
-
         if user:
             if user.is_active:
                 login(request, user)
-                return redirect(reverse('movie_app:dashboard'))
+                return redirect('movie_app:dashboard')
             else:
-                return HttpResponse("Your account is disabled.")
+                error = "Your account is disabled."
         else:
-            context = {'error': 'Invalid username or password. Please try again.'}
-            return render(request, 'movie_app/login.html', context)
-
-    return render(request, 'movie_app/login.html')
+            error = "Invalid login credentials."
+    return render(request, 'movie_app/login.html', {'error': error})
 
 def sign_up(request):
-    if request.user.is_authenticated:
-        return redirect(reverse('movie_app:dashboard'))
-
     registered = False
-    error = None
+    error = None  # for password mismatch
 
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        email = request.POST.get('email', '').strip()
-        password = request.POST.get('password', '').strip()
-        password2 = request.POST.get('password2', '').strip()
-        biography = request.POST.get('biography', '').strip()
+        user_form = UserForm(request.POST)
+        profile_form = UserProfileForm(request.POST, request.FILES)
 
-        if not username or not password:
-            error = 'Username and password are required.'
-        elif password != password2:
-            error = 'Passwords do not match.'
-        elif User.objects.filter(username=username).exists():
-            error = 'That username is already taken.'
-        else:
-            user = User.objects.create_user(username=username, password=password, email=email)
+        password = request.POST.get('password')
+        password2 = request.POST.get('password2')
+        if password != password2:
+            error = "Your passwords don't match"
+        elif user_form.is_valid() and profile_form.is_valid():
+            user = user_form.save(commit=False)
+            user.set_password(user.password)
             user.save()
-
-            profile = UserProfile.objects.create(user=user, biography=biography)
+            profile = profile_form.save(commit=False)
+            profile.user = user
             profile.save()
-
             registered = True
+        else:
+            error = "Please fix the errors"
 
-    context = {'registered': registered, 'error': error}
-    return render(request, 'movie_app/signup.html', context)
+    else:
+        user_form = UserForm()
+        profile_form = UserProfileForm()
+
+    return render(request, 'movie_app/signup.html', {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'registered': registered,
+        'error': error
+    })
 
 @login_required
 def user_logout(request):
