@@ -9,7 +9,7 @@
             <p class="text-muted small mb-0">Discover and rate movies from the database.</p>
         </div>
         
-        <div class="d-flex gap-2 mt-3 mt-md-0">
+        <form method="get" action="{% url 'movie_app:all_movies' %}" class="d-flex gap-2 mt-3 mt-md-0">
             <div class="input-group" style="width: 250px;">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control border-start-0 ps-0" placeholder="Search movies..." name="q" value="{{ query }}">
@@ -35,7 +35,8 @@
                 <option value="2009">2009</option>
                 <option value="older">Older...</option>
             </select>
-        </div>
+            <button type="submit" class="btn btn-primary rounded-0">Search</button>
+        </form>
     </div>
 
     <hr class="mb-4">

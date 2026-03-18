@@ -38,6 +38,7 @@ def sign_up(request):
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
         password2 = request.POST.get('password2', '').strip()
         biography = request.POST.get('biography', '').strip()
@@ -49,7 +50,7 @@ def sign_up(request):
         elif User.objects.filter(username=username).exists():
             error = 'That username is already taken.'
         else:
-            user = User.objects.create_user(username=username, password=password)
+            user = User.objects.create_user(username=username, password=password, email=email)
             user.save()
 
             profile = UserProfile.objects.create(user=user, biography=biography)
@@ -98,3 +99,28 @@ def all_movies(request):
         'year': year,
     }
     return render(request, 'movie_app/all_movies.html', context)
+
+@login_required
+def view_profile(request, user_slug):
+    profile_user = get_object_or_404(User, username=user_slug)
+    profile = get_object_or_404(UserProfile, user=profile_user)
+    ratings = Rating.objects.filter(user_profile=profile).select_related('movie')
+
+    already_following = False
+    if request.user.is_authenticated and request.user != profile_user:
+        try:
+            viewer_profile = UserProfile.objects.get(user=request.user)
+            already_following = viewer_profile.follow_list.filter(pk=profile.pk).exists()
+        except UserProfile.DoesNotExist:
+            pass
+
+    is_own_profile = request.user == profile_user
+
+    context = {
+        'profile': profile,
+        'profile_user': profile_user,
+        'ratings': ratings,
+        'already_following': already_following,
+        'is_own_profile': is_own_profile,
+    }
+    return render(request, 'movie_app/profile.html', context)

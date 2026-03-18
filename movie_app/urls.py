@@ -21,4 +21,7 @@ urlpatterns = [
 
      path('all-movies/', views.all_movies,
          name='all_movies'),
+
+    path('profile/<slug:user_slug>/', views.view_profile, 
+        name='view_profile'),
 ]
