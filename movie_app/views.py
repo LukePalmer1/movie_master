@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.http import HttpResponse
+from django.core.paginator import Paginator
 
 from movie_app.forms import UserForm, UserProfileForm
 from movie_app.models import UserProfile, Rating, Movie
@@ -67,17 +68,19 @@ def user_logout(request):
 @login_required
 def dashboard(request):
     profile = get_object_or_404(UserProfile, user=request.user)
-    ratings = Rating.objects.filter(user_profile=profile).select_related('movie')
+    ratings = Rating.objects.filter(user_profile=profile).select_related('movie')[:7]
     watchlist = profile.watch_list.all()
+    movies = Movie.objects.all()[:8]
 
     context = {
         'profile': profile,
         'ratings': ratings,
         'watchlist': watchlist,
+        'movies' : movies,
     }
     return render(request, 'movie_app/dashboard.html', context)
 
-def all_movies(request):
+def all_movies(request, page=1):
     movies = Movie.objects.all()
 
     query = request.GET.get('q', '').strip()
@@ -85,15 +88,27 @@ def all_movies(request):
         movies = movies.filter(title__icontains=query)
 
     year = request.GET.get('year', '').strip()
-    if year:
-        movies = movies.filter(release_date__startswith=year)
+    if year and year != "All":
+        if year == "older":
+            movies = movies.filter(release_date__startswith="1")
+        else:
+            movies = movies.filter(release_date__startswith=year)
 
     movies = movies.order_by('title')
+    paginator = Paginator(movies, 100)
+    last_page_no = paginator.num_pages
+
+    if page > last_page_no:
+        return redirect(reverse('movie_app:all_movies') + str(last_page_no)  + "?" + request.GET.urlencode())
+    
+    cur_page = paginator.get_page(page)
 
     context = {
-        'movies': movies,
+        'movies': cur_page,
         'query': query,
         'year': year,
+        'num_pages': last_page_no,
+        'page': page,
     }
     return render(request, 'movie_app/all_movies.html', context)
 
