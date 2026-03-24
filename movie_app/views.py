@@ -1,15 +1,30 @@
-from django.shortcuts import get_object_or_404, render
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.urls import reverse
 from django.http import HttpResponse
+
 from movie_app.forms import UserForm, UserProfileForm
-from movie_app.models import Rating, UserProfile
+from movie_app.models import UserProfile, Rating, Movie
 
-# Create your views here.
+def user_login(request):
+    error = None
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            if user.is_active:
+                login(request, user)
+                return redirect('movie_app:dashboard')
+            else:
+                error = "Your account is disabled."
+        else:
+            error = "Invalid login credentials."
+    return render(request, 'movie_app/login.html', {'error': error})
 
-def register(request):
+def sign_up(request):
     registered = False
     error = None  # for password mismatch
 
@@ -43,30 +58,11 @@ def register(request):
         'error': error
     })
 
-def user_login(request):
-    error = None
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(username=username, password=password)
-        if user:
-            if user.is_active:
-                login(request, user)
-                return redirect('movie_app:dashboard')
-            else:
-                error = "Your account is disabled."
-        else:
-            error = "Invalid login credentials."
-    return render(request, 'movie_app/login.html', {'error': error})
-
 @login_required
 def user_logout(request):
+    #Log the user out and send them back to the homepage.
     logout(request)
-    return redirect('movie_app:login')
-
-@login_required
-def restricted(request):
-    return render(request, 'movie_app/restricted.html')
+    return redirect(reverse('movie_app:login'))
 
 @login_required
 def dashboard(request):
@@ -80,3 +76,48 @@ def dashboard(request):
         'watchlist': watchlist,
     }
     return render(request, 'movie_app/dashboard.html', context)
+
+def all_movies(request):
+    movies = Movie.objects.all()
+
+    query = request.GET.get('q', '').strip()
+    if query:
+        movies = movies.filter(title__icontains=query)
+
+    year = request.GET.get('year', '').strip()
+    if year:
+        movies = movies.filter(release_date__startswith=year)
+
+    movies = movies.order_by('title')
+
+    context = {
+        'movies': movies,
+        'query': query,
+        'year': year,
+    }
+    return render(request, 'movie_app/all_movies.html', context)
+
+@login_required
+def view_profile(request, user_slug):
+    profile_user = get_object_or_404(User, username=user_slug)
+    profile = get_object_or_404(UserProfile, user=profile_user)
+    ratings = Rating.objects.filter(user_profile=profile).select_related('movie')
+
+    already_following = False
+    if request.user.is_authenticated and request.user != profile_user:
+        try:
+            viewer_profile = UserProfile.objects.get(user=request.user)
+            already_following = viewer_profile.follow_list.filter(pk=profile.pk).exists()
+        except UserProfile.DoesNotExist:
+            pass
+
+    is_own_profile = request.user == profile_user
+
+    context = {
+        'profile': profile,
+        'profile_user': profile_user,
+        'ratings': ratings,
+        'already_following': already_following,
+        'is_own_profile': is_own_profile,
+    }
+    return render(request, 'movie_app/profile.html', context)
