@@ -88,7 +88,7 @@ def all_movies(request, page=1):
         movies = movies.filter(title__icontains=query)
 
     year = request.GET.get('year', '').strip()
-    if year and year != "All":
+    if year and year != "all":
         if year == "older":
             movies = movies.filter(release_date__startswith="1")
         else:
@@ -127,6 +127,12 @@ def view_profile(request, user_slug):
             pass
 
     is_own_profile = request.user == profile_user
+
+    if request.POST:
+        removed_movie = get_object_or_404(Movie, movieID__iexact=request.POST.get("removed_movie"))
+
+        if removed_movie:
+            profile.watch_list.remove(removed_movie.movieID)
 
     context = {
         'profile': profile,
