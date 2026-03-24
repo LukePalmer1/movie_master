@@ -24,5 +24,13 @@ urlpatterns = [
 
     path('profile/<slug:user_slug>/', views.view_profile, 
         name='view_profile'),
+    
+    path('<slug:movie_slug>/watchlist/', views.toggle_watchlist,
+        name='toggle_watchlist'),
 
+    path('<slug:movie_slug>/', views.movie_detail, 
+        name='movie_detail'),
+
+    path('profile/<slug:user_slug>/follow/', views.follow_user, 
+        name='follow_user'),
 ]
