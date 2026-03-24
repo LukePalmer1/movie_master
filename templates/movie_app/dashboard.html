@@ -9,7 +9,7 @@
     <div class="mb-3"> 
         <div class="d-flex align-items-baseline mb-2">
             <h3 class="mb-0 me-3">Movies you have rated</h3>
-            <a href="#" class="text-decoration-none fw-bold" style="color: var(--primary-blue);">View all</a>
+            <a href="{% url 'movie_app:view_profile'  user_slug=request.user.username %}" class="text-decoration-none fw-bold" style="color: var(--primary-blue);">View all</a>
         </div>
         
         <div class="d-flex overflow-auto pb-2" style="gap: 20px; scrollbar-width: thin;">
@@ -67,7 +67,7 @@
     <div>
         <div class="d-flex align-items-baseline mb-2">
             <h3 class="mb-0 me-3">All Movies</h3>
-            <a href="#" class="text-decoration-none fw-bold" style="color: var(--primary-blue);">View all</a>
+            <a href="{% url 'movie_app:all_movies' %}" class="text-decoration-none fw-bold" style="color: var(--primary-blue);">View all</a>
         </div>
         
         <div class="d-flex flex-wrap" style="gap: 20px;">
