@@ -8,6 +8,7 @@ class Movie(models.Model):
     overview = models.CharField(max_length=1000)
     poster_path = models.URLField(max_length=100)
     average_rating = models.FloatField(max_length=4, default=0)
+    no_of_ratings = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
