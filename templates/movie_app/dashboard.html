@@ -15,6 +15,7 @@
         <div class="d-flex overflow-auto pb-2" style="gap: 20px; scrollbar-width: thin;">
             
             {% for rating in ratings %}
+            <a href="{% url 'movie_app:movie_detail' rating.movie.movieID %} ">
             <div class="card rounded-0 flex-shrink-0" style="width: 160px; border: var(--wireframe-border);">
                 <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
                     <img src="{{ rating.movie.poster_path }}" alt="{{ rating.movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
@@ -29,6 +30,7 @@
                     </div>
                 </div>
             </div>
+            </a>
             {% endfor %}
 
             <div class="card rounded-0 flex-shrink-0 d-flex flex-column align-items-center justify-content-center" style="width: 160px; border: 2px dashed #adb5bd; background-color: transparent; cursor: pointer;">
@@ -47,6 +49,7 @@
         <div class="d-flex flex-wrap" style="gap: 20px;">
             
             {% for movie in movies %}
+            <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
             <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
                 <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
                     <img src="{{ movie.poster_path }}" alt="{{ movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
@@ -66,6 +69,7 @@
                     </p>
                 </div>
             </div>
+            </a>
             {% endfor %}
         </div>
     </div>

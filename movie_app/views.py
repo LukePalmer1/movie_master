@@ -137,8 +137,8 @@ def view_profile(request, user_slug):
     }
     return render(request, 'movie_app/profile.html', context)
 
-def movie_detail(request, movie_slug):
-    movie = get_object_or_404(Movie, title__iexact=movie_slug.replace('-', ' '))
+def movie_detail(request, movieID):
+    movie = get_object_or_404(Movie, movieID__iexact=movieID)
     ratings = Rating.objects.filter(movie=movie).select_related('user_profile__user')
 
     user_rating = None
@@ -146,6 +146,23 @@ def movie_detail(request, movie_slug):
     if request.user.is_authenticated:
         try:
             profile = UserProfile.objects.get(user=request.user)
+            if request.POST:
+                rating = request.POST.get("rating")
+                review = request.POST.get("review")
+                new_rating, created = Rating.objects.get_or_create(user_profile = profile, movie = movie)
+                new_rating.rating = rating
+                new_rating.review = review
+                new_rating.save()
+
+                movie_ratings = Rating.objects.filter(movie=movie)
+                total = 0
+                if created:
+                    movie.no_of_ratings += 1
+                for cur_rating in movie_ratings:
+                    total += cur_rating.rating
+                movie.average_rating = total
+                movie.save()
+
             user_rating = Rating.objects.filter(user_profile=profile, movie=movie).first()
             in_watchlist = profile.watch_list.filter(pk=movie.pk).exists()
         except UserProfile.DoesNotExist:
@@ -160,9 +177,9 @@ def movie_detail(request, movie_slug):
     return render(request, 'movie_app/movie_detail.html', context)
 
 @login_required
-def toggle_watchlist(request, movie_slug):
+def toggle_watchlist(request, movieID):
     if request.method == 'POST':
-        movie   = get_object_or_404(Movie, title__iexact=movie_slug.replace('-', ' '))
+        movie   = get_object_or_404(Movie, movieID__iexact=movieID)
         profile = get_object_or_404(UserProfile, user=request.user)
 
         if profile.watch_list.filter(pk=movie.pk).exists():
@@ -171,7 +188,7 @@ def toggle_watchlist(request, movie_slug):
             profile.watch_list.add(movie)
 
     return redirect(reverse('movie_app:movie_detail',
-                            kwargs={'movie_slug': movie_slug}))
+                            kwargs={'movieID': movieID}))
 
 @login_required
 def follow_user(request, user_slug):

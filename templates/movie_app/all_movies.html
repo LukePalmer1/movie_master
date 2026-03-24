@@ -55,6 +55,7 @@
     <div class="d-flex flex-wrap justify-content-center flex-grow-1" style="gap: 20px;">
         
         {% for movie in movies %}
+        <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
         <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
             <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
                 <img src="{{ movie.poster_path }}" alt="{{ movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
@@ -74,6 +75,7 @@
                 </p>
             </div>
         </div>
+        </a>
         {% endfor %}
 
     </div>
@@ -85,15 +87,15 @@
             {% else %}
             <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' movies.previous_page_number %}?{{ request.GET.urlencode }}">Previous</a></li>
             <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' 1 %}?{{ request.GET.urlencode }}">1</a></li>
+            <li class="page-item disabled"><span class="page-link text-secondary">...</span></li>
             {% endif %}
 
-            <li class="page-item disabled"><span class="page-link text-secondary">...</span></li>
             <li class="page-item active"><a class="page-link" href="{% url 'movie_app:all_movies' page %}?{{ request.GET.urlencode }}" style="background-color: var(--primary-blue); border-color: var(--primary-blue);">{{ page }}</a></li>
-            <li class="page-item disabled"><span class="page-link text-secondary">...</span></li>
 
             {% if not movies.has_next %}
             <li class="page-item disabled"><a class="page-link text-secondary" href="">Next</a></li>
             {% else %}
+            <li class="page-item disabled"><span class="page-link text-secondary">...</span></li>
             <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' num_pages %}?{{ request.GET.urlencode }}">{{ num_pages }}</a></li>
             <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' movies.next_page_number %}?{{ request.GET.urlencode }}">Next</a></li>
             {% endif %}
