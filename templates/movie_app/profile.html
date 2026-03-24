@@ -40,6 +40,16 @@
                     <div class="d-flex flex-column justify-content-center h-100">
                         <h5 class="text-muted mb-1">User</h5>
                         <h2 class="fw-bold" style="color: var(--primary-blue);">{{ profile_user.username }}</h2>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <h2 class="fw-bold mb-0" style="color: var(--primary-blue);">[USERNAME]</h2>
+                            
+                            <button type="button" id="mainFollowBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-4">Follow</button>
+                        </div>
+                        
+                        <p class="mt-2 text-muted small">
+                            <span class="fw-bold text-dark">3</span> Followers | <span class="fw-bold text-dark">5</span> Following
+                        </p>
                     </div>
                 {% endif %}
                 
@@ -47,16 +57,13 @@
 
             <div class="col-md-6 d-flex flex-column ps-md-4 border-md-start">
                 <h5 class="fw-bold mb-3 border-bottom pb-2">About Me</h5>
-                
                 <div class="d-flex flex-column flex-grow-1">
-                    
                     {% if is_own_profile %}
                         <textarea class="form-control rounded-0 mb-3 flex-grow-1" placeholder="Write something about yourself..." style="resize: none; border: var(--wireframe-border); min-height: 100px;"></textarea>
                         <button class="btn text-white w-100 fw-bold rounded-0" style="background-color: var(--primary-blue);">Save Profile</button>
                     {% else %}
-                        <p class="text-muted">This user hasn't written a bio yet. They are a mystery...</p>
+                        <p class="text-muted">[User's bio goes here]</p>
                     {% endif %}
-                    
                 </div>
             </div>
 
@@ -64,40 +71,105 @@
     </div>
 
     <div>
-        <h4 class="fw-bold mb-3">Rated Movies</h4>
-        <hr class="mb-4">
+        <ul class="nav nav-tabs mb-4 border-bottom" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold rounded-0" id="rated-tab" data-bs-toggle="tab" data-bs-target="#rated" type="button" role="tab" style="color: var(--primary-blue);">Rated Movies</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold rounded-0 text-muted" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab">Watchlist</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold rounded-0 text-muted" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab">Following</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold rounded-0 text-muted" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab">Followers</button>
+            </li>
+        </ul>
         
-        <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
+        <div class="tab-content" id="profileTabsContent">
             
-            {% for i in "1234567890123456" %}
-            <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
-                <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
-                    <img src="https://placehold.co/300x450/e9ecef/495057?text=Poster" alt="Movie Poster placeholder" class="w-100 h-100" style="object-fit: cover;">
-                </div>
-                <div class="card-body p-2 d-flex flex-column">
-                    <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">[Movie Title]</p>
-                    
-                    <div class="d-flex justify-content-between align-items-center mt-1 mb-2 bg-light p-1" style="border: 1px solid #ccc;">
-                        <div class="d-flex align-items-center">
-                            <small class="fw-bold me-2" style="font-size: 0.7rem;">MY RATING:</small>
-                            <div class="text-warning" style="font-size: 0.75rem;">
-                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
-                            </div>
+            <div class="tab-pane fade show active" id="rated" role="tabpanel">
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
+                    {% for i in "12345678" %}
+                    <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
+                        <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
+                            <img src="https://placehold.co/300x450/e9ecef/495057?text=Poster" alt="Poster" class="w-100 h-100" style="object-fit: cover;">
                         </div>
-                        
-                        {% if is_own_profile %}
-                        <button class="btn btn-sm p-0 text-secondary" data-bs-toggle="modal" data-bs-target="#editReviewModal" title="Edit Rating">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        {% endif %}
+                        <div class="card-body p-2 d-flex flex-column">
+                            <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">[Movie Title]</p>
+                            <div class="d-flex justify-content-between align-items-center mt-1 mb-2 bg-light p-1" style="border: 1px solid #ccc;">
+                                <div class="d-flex align-items-center">
+                                    <small class="fw-bold me-2" style="font-size: 0.7rem;">RATING:</small>
+                                    <div class="text-warning" style="font-size: 0.75rem;">
+                                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                                    </div>
+                                </div>
+                                {% if is_own_profile %}
+                                <button class="btn btn-sm p-0 text-secondary" data-bs-toggle="modal" data-bs-target="#editReviewModal">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted mb-0" style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                "[Template snippet of the user's review...]"
+                            </p>
+                        </div>
                     </div>
-                    
-                    <p class="text-muted mb-0" style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                        "Short snippet of the user's review for this movie will go right here..."
-                    </p>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
+
+            <div class="tab-pane fade" id="watchlist" role="tabpanel">
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
+                    {% for i in "1234" %}
+                    <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
+                        <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
+                            <img src="https://placehold.co/300x450/e9ecef/495057?text=Poster" alt="Poster" class="w-100 h-100" style="object-fit: cover;">
+                        </div>
+                        <div class="card-body p-2 text-center">
+                            <p class="mb-2 fw-bold text-truncate" style="font-size: 0.95rem;">[Movie Title]</p>
+                            {% if is_own_profile %}
+                            <button class="btn btn-sm btn-outline-danger w-100 rounded-0" style="font-size: 0.75rem fw-bold;">Remove</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="following" role="tabpanel">
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
+                    {% for i in "12345" %}
+                    <div class="card rounded-0 p-3 text-center" style="width: 150px; border: var(--wireframe-border);">
+                        <div class="rounded-circle bg-light mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 65px; height: 65px; border: 1px solid #ccc;">
+                            <i class="bi bi-person fs-3 text-muted"></i>
+                        </div>
+                        <p class="mb-3 fw-bold text-truncate" style="font-size: 0.9rem;">@username_{{ i }}</p>
+                        
+                        {% if is_own_profile %}
+                        <button class="btn btn-sm btn-outline-danger w-100 rounded-0" style="font-size: 0.75rem;">Unfollow</button>
+                        {% else %}
+                        <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">Follow</button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="followers" role="tabpanel">
+                <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
+                    {% for i in "123" %}
+                    <div class="card rounded-0 p-3 text-center" style="width: 150px; border: var(--wireframe-border);">
+                        <div class="rounded-circle bg-light mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 65px; height: 65px; border: 1px solid #ccc;">
+                            <i class="bi bi-person fs-3 text-muted"></i>
+                        </div>
+                        <p class="mb-3 fw-bold text-truncate" style="font-size: 0.9rem;">@follower_{{ i }}</p>
+                        
+                        <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">Follow</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
 
         </div>
     </div>
@@ -105,50 +177,39 @@
     <div class="modal fade" id="editReviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-0" style="border: var(--wireframe-border);">
-                
                 <div class="modal-header border-bottom-0 pb-0">
                     <h5 class="modal-title fw-bold">Edit Review</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
                 <div class="modal-body">
                     <form>
                         <p class="fw-bold mb-3" style="color: var(--primary-blue);">[Movie Title]</p>
-                        
                         <div class="mb-3 d-flex align-items-center">
                             <label class="fw-bold me-3 small">Update Rating:</label>
-                            
                             <div id="interactive-rating" class="text-warning fs-5" style="cursor: pointer; display: inline-block;">
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
+                                <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
                             </div>
-                            
                             <input type="hidden" name="rating" id="rating-input" value="0">
-                            
                             <span id="rating-display" class="ms-3 fw-bold text-muted small">0 / 5</span>
                         </div>
-                        
                         <div class="mb-4">
                             <label class="fw-bold mb-1 small">Update Text:</label>
-                            <textarea class="form-control rounded-0" rows="4" style="resize: none; border: 1px solid #000;">"Short snippet of the user's review for this movie will go right here..."</textarea>
+                            <textarea class="form-control rounded-0" rows="4" style="resize: none; border: 1px solid #000;">"[Template snippet of review]"</textarea>
                         </div>
-                        
                         <div class="d-flex justify-content-end gap-2">
                             <button type="button" class="btn btn-light border rounded-0 fw-bold" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn text-white fw-bold rounded-0" style="background-color: var(--primary-blue);">Save Rating</button>
                         </div>
                     </form>
                 </div>
-                
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            
+            // star rating code
             const ratingContainer = document.getElementById('interactive-rating');
             if (ratingContainer) {
                 const stars = ratingContainer.querySelectorAll('i');
@@ -158,13 +219,9 @@
                 function updateStarVisuals(value) {
                     stars.forEach((star, index) => {
                         star.className = 'bi text-warning '; 
-                        if (value >= index + 1) {
-                            star.className += 'bi-star-fill'; 
-                        } else if (value >= index + 0.5) {
-                            star.className += 'bi-star-half'; 
-                        } else {
-                            star.className += 'bi-star';      
-                        }
+                        if (value >= index + 1) star.className += 'bi-star-fill'; 
+                        else if (value >= index + 0.5) star.className += 'bi-star-half'; 
+                        else star.className += 'bi-star';      
                     });
                 }
 
@@ -172,15 +229,13 @@
                     star.addEventListener('mousemove', function(e) {
                         const rect = star.getBoundingClientRect();
                         const isHalf = (e.clientX - rect.left) < (rect.width / 2);
-                        const hoverValue = index + (isHalf ? 0.5 : 1);
-                        updateStarVisuals(hoverValue);
+                        updateStarVisuals(index + (isHalf ? 0.5 : 1));
                     });
 
                     star.addEventListener('click', function(e) {
                         const rect = star.getBoundingClientRect();
                         const isHalf = (e.clientX - rect.left) < (rect.width / 2);
                         const finalValue = index + (isHalf ? 0.5 : 1);
-                        
                         ratingInput.value = finalValue; 
                         ratingDisplay.innerText = finalValue + ' / 5'; 
                     });
@@ -190,6 +245,25 @@
                     updateStarVisuals(parseFloat(ratingInput.value));
                 });
             }
+
+            // follow button code
+            const followBtn = document.getElementById('mainFollowBtn');
+            if (followBtn) {
+                followBtn.addEventListener('click', function() {
+                    if (this.innerText === 'Follow') {
+                        // change to unfollow button
+                        this.innerText = 'Unfollow';
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-outline-secondary');
+                    } else {
+                        // change back to follow button
+                        this.innerText = 'Follow';
+                        this.classList.remove('btn-outline-secondary');
+                        this.classList.add('btn-primary');
+                    }
+                });
+            }
+
         });
     </script>
 
