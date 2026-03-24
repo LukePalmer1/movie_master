@@ -18,7 +18,7 @@ def user_login(request):
         if user:
             if user.is_active:
                 login(request, user)
-                return redirect('movie_app:dashboard')
+                return redirect(reverse('movie_app:dashboard'))
             else:
                 error = "Your account is disabled."
         else:
@@ -136,3 +136,54 @@ def view_profile(request, user_slug):
         'is_own_profile': is_own_profile,
     }
     return render(request, 'movie_app/profile.html', context)
+
+def movie_detail(request, movie_slug):
+    movie = get_object_or_404(Movie, title__iexact=movie_slug.replace('-', ' '))
+    ratings = Rating.objects.filter(movie=movie).select_related('user_profile__user')
+
+    user_rating = None
+    in_watchlist = False
+    if request.user.is_authenticated:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            user_rating = Rating.objects.filter(user_profile=profile, movie=movie).first()
+            in_watchlist = profile.watch_list.filter(pk=movie.pk).exists()
+        except UserProfile.DoesNotExist:
+            pass
+
+    context = {
+        'movie': movie,
+        'ratings': ratings,
+        'user_rating': user_rating,
+        'in_watchlist': in_watchlist,
+    }
+    return render(request, 'movie_app/movie_detail.html', context)
+
+@login_required
+def toggle_watchlist(request, movie_slug):
+    if request.method == 'POST':
+        movie   = get_object_or_404(Movie, title__iexact=movie_slug.replace('-', ' '))
+        profile = get_object_or_404(UserProfile, user=request.user)
+
+        if profile.watch_list.filter(pk=movie.pk).exists():
+            profile.watch_list.remove(movie)
+        else:
+            profile.watch_list.add(movie)
+
+    return redirect(reverse('movie_app:movie_detail',
+                            kwargs={'movie_slug': movie_slug}))
+
+@login_required
+def follow_user(request, user_slug):
+    if request.method == 'POST':
+        target_user    = get_object_or_404(User, username=user_slug)
+        target_profile = get_object_or_404(UserProfile, user=target_user)
+        my_profile     = get_object_or_404(UserProfile, user=request.user)
+
+        if target_user != request.user:
+            if my_profile.follow_list.filter(pk=target_profile.pk).exists():
+                my_profile.follow_list.remove(target_profile)
+            else:
+                my_profile.follow_list.add(target_profile)
+
+    return redirect(reverse('movie_app:view_profile', kwargs={'user_slug': user_slug}))
