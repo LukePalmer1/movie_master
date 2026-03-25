@@ -28,6 +28,9 @@ urlpatterns = [
     path('profile/save-bio/', views.save_bio,
         name='save_bio'),
 
+    path('profile/reviews/<int:rating_id>/edit/', views.edit_review, 
+        name='edit_review'),
+
     path('profile/<slug:user_slug>/', views.view_profile, 
         name='view_profile'),
     
