@@ -66,7 +66,10 @@
                     
                     <div class="p-3 bg-light" style="border: var(--wireframe-border);">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold small">@username1</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold small">@username1</span>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2 review-follow-btn" style="font-size: 0.7rem;">Follow</button>
+                            </div>
                             <span class="badge border text-dark bg-white"><i class="bi bi-star-fill text-warning me-1"></i> 5 / 5</span>
                         </div>
                         <p class="mb-0 text-muted small">[Template review 1]</p>
@@ -74,7 +77,10 @@
 
                     <div class="p-3 bg-light" style="border: var(--wireframe-border);">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold small">@username2</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold small">@username2</span>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2 review-follow-btn" style="font-size: 0.7rem;">Follow</button>
+                            </div>
                             <span class="badge border text-dark bg-white"><i class="bi bi-star-fill text-warning me-1"></i> 3.5 / 5</span>
                         </div>
                         <p class="mb-0 text-muted small">[Template review 2]</p>
@@ -82,7 +88,10 @@
 
                     <div class="p-3 bg-light" style="border: var(--wireframe-border);">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold small">@username3</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold small">@username3</span>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2 review-follow-btn" style="font-size: 0.7rem;">Follow</button>
+                            </div>
                             <span class="badge border text-dark bg-white"><i class="bi bi-star-fill text-warning me-1"></i> 1.5 / 5</span>
                         </div>
                         <p class="mb-0 text-muted small">[Template review 3]</p>
@@ -97,6 +106,8 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        
+        // star rating code
         const ratingContainer = document.getElementById('interactive-rating');
         if (ratingContainer) {
             const stars = ratingContainer.querySelectorAll('i');
@@ -132,6 +143,25 @@
                 updateStarVisuals(parseFloat(ratingInput.value));
             });
         }
+
+        // follow button logic
+        const reviewFollowBtns = document.querySelectorAll('.review-follow-btn');
+        reviewFollowBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.innerText === 'Follow') {
+                    // change to unfollow button
+                    this.innerText = 'Unfollow';
+                    this.classList.remove('btn-outline-primary');
+                    this.classList.add('btn-outline-secondary');
+                } else {
+                    // change back to follow state
+                    this.innerText = 'Follow';
+                    this.classList.remove('btn-outline-secondary');
+                    this.classList.add('btn-outline-primary');
+                }
+            });
+        });
+
     });
 </script>
 {% endblock %}
