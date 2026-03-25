@@ -167,7 +167,7 @@
                         </a>
                         {% if followed.user.id == user_profile.user.id %}
                             <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">You!</button>
-                        {% elif followed in user_profile.follow_list.all %}
+                        {% elif followed in user_following %}
                             <button id ="{{ followed.user.username}}" class="btn btn-sm btn-outline-danger w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Unfollow</button>
                         {% else %}
                             <button id ="{{ followed.user.username}}" class="btn btn-sm btn-outline-primary w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Follow</button>
@@ -189,7 +189,7 @@
                         </a>
                         {% if follower.user.id == user_profile.user.id %}
                             <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">You!</button>
-                        {% elif follower in user_profile.follow_list.all %}
+                        {% elif follower in user_followed %}
                             <button id ="{{ follower.user.username}}" class="btn btn-sm btn-outline-danger w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Unfollow</button>
                         {% else %}
                             <button id ="{{ follower.user.username}}" class="btn btn-sm btn-outline-primary w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Follow</button>

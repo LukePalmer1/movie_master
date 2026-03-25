@@ -127,12 +127,17 @@ def view_profile(request, user_slug):
     following_list = Follow.objects.filter(follower_user_id=profile.pk)
     following_name_list = []
     for follow in following_list:
-        following_name_list.append(UserProfile.objects.get(pk=follow.following_user_id))
+        following_name_list.append(UserProfile.objects.get(pk=follow.follows_user_id))
 
     follower_list = Follow.objects.filter(follows_user_id=profile.pk)
     follower_name_list = []
     for follow in follower_list:
         follower_name_list.append(UserProfile.objects.get(pk=follow.follower_user_id))
+
+    user_following_list = Follow.objects.filter(follower_user_id=viewer_profile.pk)
+    user_following_name_list = []
+    for follow in user_following_list:
+        user_following_name_list.append(UserProfile.objects.get(pk=follow.follows_user_id))
 
     context = {
         'profile': profile,
@@ -142,6 +147,7 @@ def view_profile(request, user_slug):
         'is_own_profile': is_own_profile,
         'followers': follower_name_list,
         'following': following_name_list,
+        'user_following': user_following_name_list
     }
     return render(request, 'movie_app/profile.html', context)
 
