@@ -203,3 +203,31 @@ def save_bio(request):
     profile.biography = bio
     profile.save()
     return JsonResponse({'success': True, 'biography': profile.biography})
+
+@login_required
+@require_POST
+def edit_review(request, rating_id):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    rating_obj = get_object_or_404(Rating, id=rating_id, user_profile=profile)
+
+    review = request.POST.get('review', '').strip()
+    rating_value = request.POST.get('rating', '').strip()
+
+    try:
+        numeric_rating = float(rating_value)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Please choose a valid rating.'}, status=400)
+
+    if numeric_rating < 0 or numeric_rating > 5:
+        return JsonResponse({'error': 'Rating must be between 0 and 5.'}, status=400)
+
+    rating_obj.rating = numeric_rating
+    rating_obj.review = review
+    rating_obj.save()
+
+    return JsonResponse({
+        'success': True,
+        'rating_id': rating_obj.id,
+        'rating': rating_obj.rating,
+        'review': rating_obj.review,
+    })
