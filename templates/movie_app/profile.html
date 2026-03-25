@@ -135,10 +135,8 @@
                         <div class="card-body p-2 text-center">
                             <p class="mb-2 fw-bold text-truncate" style="font-size: 0.95rem;">{{ movie.title }}</p>
                             {% if is_own_profile %}
-                            <form method = "POST">
                             {% csrf_token %}
-                            <button name = "removed_movie" class="btn btn-sm btn-outline-danger w-100 rounded-0" style="font-size: 0.75rem fw-bold;" value = "{{ movie.movieID }}">Remove</button>
-                            </form>
+                            <button id = "{{ movie.movieID }}" class="watchlistButton btn btn-sm btn-outline-danger w-100 rounded-0" style="font-size: 0.75rem fw-bold;">Remove</button>
                             {% endif %}
                         </div>
                     </div>
@@ -215,8 +213,15 @@
         </div>
     </div>
 
+    {% load static %}
+    <script src="{% static 'js/helpers.js' %}"></script>
     <script>
+        function afterFunc(button){
+            button.parentNode.parentNode.remove()
+        }
+        
         document.addEventListener("DOMContentLoaded", function() {
+            setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
             
             // star rating code
             const ratingContainer = document.getElementById('interactive-rating');

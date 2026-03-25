@@ -19,11 +19,10 @@
                     <h6 class="fw-bold mb-2">Description</h6>
                     <p class="text-muted small mb-0"> {{ movie.overview }}</p>
 
-                    <form action="{% url 'movie_app:toggle_watchlist' movie.movieID %}" method="post" class="mt-3">
-                        {% csrf_token %}
-                        <button type="submit" class="btn w-100 rounded-0 {% if in_watchlist %}btn-danger{% else %}btn-outline-secondary{% endif %}">
-                            {% if in_watchlist %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}
-                    </form>
+                    {% csrf_token %}
+                    <button id = "{{ movie.movieID }}" type="submit" class= "watchlistButton btn w-100 rounded-0 {% if in_watchlist %}btn-danger{% else %}btn-outline-secondary{% endif %}">
+                        {% if in_watchlist %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}
+                    </button>
                 </div>
             </div>
         </div>
@@ -85,8 +84,26 @@
     </div>
 </div>
 
+{% load static %}
+<script src="{% static 'js/helpers.js' %}"></script>
 <script>
+    function afterFunc(button){
+        if (button.innerText === 'Add To Watchlist') {
+            // change to remove button
+            button.innerText = 'Remove From Watchlist';
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-danger');
+        } else {
+            // change back to add button
+            button.innerText = 'Add To Watchlist';
+            button.classList.remove('btn-danger');
+            button.classList.add('btn-outline-secondary');
+        }
+    }
+    
     document.addEventListener("DOMContentLoaded", function() {
+        setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
+
         const ratingContainer = document.getElementById('interactive-rating');
         if (ratingContainer) {
             const stars = ratingContainer.querySelectorAll('i');

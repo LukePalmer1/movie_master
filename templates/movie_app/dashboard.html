@@ -15,12 +15,18 @@
         <div class="d-flex overflow-auto pb-2" style="gap: 20px; scrollbar-width: thin;">
             
             {% for rating in ratings %}
-            <a href="{% url 'movie_app:movie_detail' rating.movie.movieID %} ">
             <div class="card rounded-0 flex-shrink-0" style="width: 160px; border: var(--wireframe-border);">
                 <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
+                    <a href="{% url 'movie_app:movie_detail' rating.movie.movieID %} ">
                     <img src="{{ rating.movie.poster_path }}" alt="{{ rating.movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
-                    <button class="btn btn-light rounded-circle position-absolute shadow-sm d-flex align-items-center justify-content-center" style="top: 8px; right: 8px; width: 30px; height: 30px; border: 1px solid #ccc; padding: 0;">
+                    </a>
+                    {% csrf_token %}
+                    <button id = "{{ rating.movie.movieID }}" class="btn btn-light rounded-circle position-absolute shadow-sm d-flex align-items-center justify-content-center watchlistButton" style="top: 8px; right: 8px; width: 30px; height: 30px; border: 1px solid #ccc; padding: 0;">
+                        {% if not rating.movie in profile.watch_list.all %}
                         <i class="bi bi-plus-lg"></i>
+                        {% else %}
+                        <i class="bi bi-dash-lg"></i>
+                        {% endif %}
                     </button>
                 </div>
                 <div class="card-body p-2">
@@ -49,14 +55,21 @@
         <div class="d-flex flex-wrap" style="gap: 20px;">
             
             {% for movie in movies %}
-            <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
             <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
                 <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
+                    <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
                     <img src="{{ movie.poster_path }}" alt="{{ movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
-                    <button class="btn btn-light rounded-circle position-absolute shadow-sm d-flex align-items-center justify-content-center" style="top: 8px; right: 8px; width: 30px; height: 30px; border: 1px solid #ccc; padding: 0;">
+                    </a>
+                    {% csrf_token %}
+                    <button id = "{{ movie.movieID }}" class="btn btn-light rounded-circle position-absolute shadow-sm d-flex align-items-center justify-content-center watchlistButton" style="top: 8px; right: 8px; width: 30px; height: 30px; border: 1px solid #ccc; padding: 0;">
+                        {% if not movie in profile.watch_list.all %}
                         <i class="bi bi-plus-lg"></i>
+                        {% else %}
+                        <i class="bi bi-dash-lg"></i>
+                        {% endif %}
                     </button>
                 </div>
+                <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
                 <div class="card-body p-2 d-flex flex-column">
                     <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ movie.title }}</p>
                     <div class="d-flex align-items-center mt-1 mb-1">
@@ -68,10 +81,33 @@
                         {{ movie.overview }}
                     </p>
                 </div>
+                </a>
             </div>
-            </a>
             {% endfor %}
         </div>
     </div>
 </div>
+
+{% load static %}
+<script src="{% static 'js/helpers.js' %}"></script>
+<script>
+    function afterFunc(button){
+        sign = button.querySelectorAll('i')[0]
+        if (sign.classList.contains('bi-plus-lg')) {
+            // change to minus
+            sign.classList.remove('bi-plus-lg');
+            sign.classList.add('bi-dash-lg');
+        } 
+        else {
+            // change to plus
+            sign.classList.remove('bi-dash-lg');
+            sign.classList.add('bi-plus-lg');
+        }
+    }
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
+    });
+    
+</script>
 {% endblock %}

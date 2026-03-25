@@ -70,13 +70,11 @@ def user_logout(request):
 def dashboard(request):
     profile = get_object_or_404(UserProfile, user=request.user)
     ratings = Rating.objects.filter(user_profile=profile).select_related('movie')[:7]
-    watchlist = profile.watch_list.all()
     movies = Movie.objects.all()[:8]
 
     context = {
         'profile': profile,
         'ratings': ratings,
-        'watchlist': watchlist,
         'movies' : movies,
     }
     return render(request, 'movie_app/dashboard.html', context)
@@ -110,6 +108,7 @@ def all_movies(request, page=1):
         'year': year,
         'num_pages': last_page_no,
         'page': page,
+        'profile': get_object_or_404(UserProfile, user=request.user)
     }
     return render(request, 'movie_app/all_movies.html', context)
 
@@ -153,23 +152,6 @@ def movie_detail(request, movieID):
     if request.user.is_authenticated:
         try:
             profile = UserProfile.objects.get(user=request.user)
-            if request.POST:
-                rating = request.POST.get("rating")
-                review = request.POST.get("review")
-                new_rating, created = Rating.objects.get_or_create(user_profile = profile, movie = movie)
-                new_rating.rating = rating
-                new_rating.review = review
-                new_rating.save()
-
-                movie_ratings = Rating.objects.filter(movie=movie)
-                total = 0
-                if created:
-                    movie.no_of_ratings += 1
-                for cur_rating in movie_ratings:
-                    total += cur_rating.rating
-                movie.average_rating = total
-                movie.save()
-
             user_rating = Rating.objects.filter(user_profile=profile, movie=movie).first()
             in_watchlist = profile.watch_list.filter(pk=movie.pk).exists()
         except UserProfile.DoesNotExist:
@@ -178,24 +160,23 @@ def movie_detail(request, movieID):
     context = {
         'movie': movie,
         'ratings': ratings,
+        'profile': profile,
         'user_rating': user_rating,
         'in_watchlist': in_watchlist,
     }
     return render(request, 'movie_app/movie_detail.html', context)
 
 @login_required
+@require_POST
 def toggle_watchlist(request, movieID):
-    if request.method == 'POST':
-        movie   = get_object_or_404(Movie, movieID__iexact=movieID)
-        profile = get_object_or_404(UserProfile, user=request.user)
+    movie   = get_object_or_404(Movie, movieID__iexact=movieID)
+    profile = get_object_or_404(UserProfile, user=get_object_or_404(User, id=request.POST.get("profile")))
 
-        if profile.watch_list.filter(pk=movie.pk).exists():
-            profile.watch_list.remove(movie)
-        else:
-            profile.watch_list.add(movie)
-
-    return redirect(reverse('movie_app:movie_detail',
-                            kwargs={'movieID': movieID}))
+    if profile.watch_list.filter(pk=movie.pk).exists():
+        profile.watch_list.remove(movie)
+    else:
+        profile.watch_list.add(movie)
+    return JsonResponse({'success': True})
 
 @login_required
 def follow_user(request, user_slug):
