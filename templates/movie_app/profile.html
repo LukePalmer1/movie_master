@@ -79,16 +79,16 @@
     <div>
         <ul class="nav nav-tabs mb-4 border-bottom" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold rounded-0" id="rated-tab" data-bs-toggle="tab" data-bs-target="#rated" type="button" role="tab" style="color: var(--primary-blue);">Rated Movies</button>
+                <button class="nav-link fw-bold rounded-0 active small-nav" id="rated-tab" data-bs-toggle="tab" data-bs-target="#rated" type="button" role="tab" style="color: var(--primary-blue);">Rated Movies</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab">Watchlist</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab">Watchlist</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab">Following</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab">Following</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab">Followers</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab">Followers</button>
             </li>
         </ul>
         
@@ -106,7 +106,7 @@
                             <div class="d-flex justify-content-between align-items-center mt-1 mb-2 bg-light p-1" style="border: 1px solid #ccc;">
                                 <div class="d-flex align-items-center">
                                     <small class="fw-bold me-2" style="font-size: 0.7rem;">RATING:</small>
-                                    <div class="text-warning" style="font-size: 0.75rem;">
+                                    <div id="{{rating.rating}}" class="text-warning stars" style="font-size: 0.75rem;">
                                         <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
                                     </div>
                                 </div>
@@ -221,9 +221,44 @@
         }
         
         document.addEventListener("DOMContentLoaded", function() {
+
+             const btnlist = document.getElementsByClassName('small-nav');
+        
+            if (btnlist) {
+                for (const button of btnlist) {
+                    button.addEventListener('click', function() {
+                        for (const btn of btnlist){
+                            try{
+                                btn.classList.remove("active")
+                                btn.classList.add("text-muted")
+                                btn.style = ""
+                            }
+                            catch{}
+                        }
+                        button.classList.add("active");
+                        button.classList.remove("text-muted")
+                        button.style = "color: var(--primary-blue);"
+                    });
+                };
+            }
+
             setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
             
             // star rating code
+            const ratingContainers = document.getElementsByClassName('stars');
+            if (ratingContainers) {
+                for (const container of ratingContainers){
+                    const stars = container.querySelectorAll('i');
+                    const value = parseInt(container.id)
+                    stars.forEach((star, index) => {
+                        star.className = 'bi'; 
+                        if (value >= index + 1) star.classList.add('bi-star-fill'); 
+                        else if (value >= index + 0.5) star.classList.add('bi-star-half'); 
+                        else star.classList.add('bi-star');      
+                    });
+                }
+            }
+
             const ratingContainer = document.getElementById('interactive-rating');
             if (ratingContainer) {
                 const stars = ratingContainer.querySelectorAll('i');
