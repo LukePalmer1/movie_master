@@ -69,7 +69,6 @@
                     {% endif %}
                 </button>
             </div>
-            <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
             <div class="card-body p-2 d-flex flex-column">
                 <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ movie.title }}</p>
                 <div class="d-flex align-items-center mt-1 mb-1">
@@ -81,7 +80,6 @@
                     {{ movie.overview }}
                 </p>
             </div>
-            </a>
         </div>
         {% endfor %}
 

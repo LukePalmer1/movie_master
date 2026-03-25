@@ -79,16 +79,16 @@
     <div>
         <ul class="nav nav-tabs mb-4 border-bottom" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold rounded-0" id="rated-tab" data-bs-toggle="tab" data-bs-target="#rated" type="button" role="tab" style="color: var(--primary-blue);">Rated Movies</button>
+                <button class="nav-link fw-bold rounded-0 active small-nav" id="rated-tab" data-bs-toggle="tab" data-bs-target="#rated" type="button" role="tab" style="color: var(--primary-blue);">Rated Movies</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab">Watchlist</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab">Watchlist</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab">Following</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab">Following</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab">Followers</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab">Followers</button>
             </li>
         </ul>
         
@@ -241,8 +241,80 @@
         }
         
         document.addEventListener("DOMContentLoaded", function() {
-            setUpWatchListButtons(afterFunc, "{{ profile.user.id }}");
             setUpEditReviews();
+
+             const btnlist = document.getElementsByClassName('small-nav');
+        
+            if (btnlist) {
+                for (const button of btnlist) {
+                    button.addEventListener('click', function() {
+                        for (const btn of btnlist){
+                            try{
+                                btn.classList.remove("active")
+                                btn.classList.add("text-muted")
+                                btn.style = ""
+                            }
+                            catch{}
+                        }
+                        button.classList.add("active");
+                        button.classList.remove("text-muted")
+                        button.style = "color: var(--primary-blue);"
+                    });
+                };
+            }
+
+            setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
+            
+            // star rating code
+            const ratingContainers = document.getElementsByClassName('stars');
+            if (ratingContainers) {
+                for (const container of ratingContainers){
+                    const stars = container.querySelectorAll('i');
+                    const value = parseInt(container.id)
+                    stars.forEach((star, index) => {
+                        star.className = 'bi'; 
+                        if (value >= index + 1) star.classList.add('bi-star-fill'); 
+                        else if (value >= index + 0.5) star.classList.add('bi-star-half'); 
+                        else star.classList.add('bi-star');      
+                    });
+                }
+            }
+
+            const ratingContainer = document.getElementById('interactive-rating');
+            if (ratingContainer) {
+                const stars = ratingContainer.querySelectorAll('i');
+                const ratingInput = document.getElementById('rating-input');
+                const ratingDisplay = document.getElementById('rating-display');
+
+                function updateStarVisuals(value) {
+                    stars.forEach((star, index) => {
+                        star.className = 'bi text-warning '; 
+                        if (value >= index + 1) star.className += 'bi-star-fill'; 
+                        else if (value >= index + 0.5) star.className += 'bi-star-half'; 
+                        else star.className += 'bi-star';      
+                    });
+                }
+
+                stars.forEach((star, index) => {
+                    star.addEventListener('mousemove', function(e) {
+                        const rect = star.getBoundingClientRect();
+                        const isHalf = (e.clientX - rect.left) < (rect.width / 2);
+                        updateStarVisuals(index + (isHalf ? 0.5 : 1));
+                    });
+
+                    star.addEventListener('click', function(e) {
+                        const rect = star.getBoundingClientRect();
+                        const isHalf = (e.clientX - rect.left) < (rect.width / 2);
+                        const finalValue = index + (isHalf ? 0.5 : 1);
+                        ratingInput.value = finalValue; 
+                        ratingDisplay.innerText = finalValue + ' / 5'; 
+                    });
+                });
+
+                ratingContainer.addEventListener('mouseleave', function() {
+                    updateStarVisuals(parseFloat(ratingInput.value));
+                });
+            }
 
             const followBtn = document.getElementById('mainFollowBtn');
             if (followBtn) {
