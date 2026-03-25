@@ -32,26 +32,26 @@
                         <div class="col-4 fw-bold small">Password</div>
                         <div class="col-8">
                             <input type="password" class="form-control form-control-sm" value="********" disabled>
-                            <small class="text-muted" style="font-size: 0.7rem;"><a href="#">Change password</a></small>
                         </div>
                     </div>
                 
                 {% else %}
                     <div class="d-flex flex-column justify-content-center h-100">
                         <h5 class="text-muted mb-1">User</h5>
-                        <h2 class="fw-bold" style="color: var(--primary-blue);">{{ profile_user.username }}</h2>
+                        <h2 class="fw-bold" style="color: var(--primary-blue);">{{ profile.user.username }}</h2>
                         
                         <div class="d-flex align-items-center gap-3">
-                            <form action="{% url 'movie_app:follow_user' user_slug=profile_user.username %}" method="post">
-                                {% csrf_token %}
-                                <button type="submit" id="mainFollowBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-4">
-                                    {% if already_following %}Unfollow{% else %}Follow{% endif %}
-                                </button>
-                            </form>
+                            {% csrf_token %}
+                            {% if already_following %}
+                            <button type="submit" id="{{ profile.user.username }}" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-4 follow-btn">Unfollow</button>
+                            {% else %}
+                            <button type="submit" id="{{ profile.user.username }}" class="btn btn-primary btn-sm fw-bold rounded-pill px-4 follow-btn">Follow</button>
+                            {% endif %}
+                            </button>
                         </div>
                         
                         <p class="mt-2 text-muted small">
-                            <span class="fw-bold text-dark">3</span> Followers | <span class="fw-bold text-dark">5</span> Following
+                            <span class="fw-bold text-dark">{{ followers|length }}</span> Followers | <span class="fw-bold text-dark">{{ following|length }}</span> Following
                         </p>
                     </div>
                 {% endif %}
@@ -99,7 +99,9 @@
                     {% for rating in ratings %}
                     <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
                         <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
-                            <img src="{{rating.movie.poster_path}}" alt="Poster" class="w-100 h-100" style="object-fit: cover;">
+                            <a href="{% url 'movie_app:movie_detail' rating.movie.movieID %} ">
+                            <img src="{{ rating.movie.poster_path }}" alt="{{ rating.movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
+                            </a>                       
                         </div>
                         <div class="card-body p-2 d-flex flex-column">
                             <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ rating.movie.title }}</p>
@@ -137,7 +139,9 @@
                     {% for movie in profile.watch_list.all %}
                     <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
                         <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
+                            <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
                             <img src="{{ movie.poster_path }}" alt="{{ movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
+                            </a>
                         </div>
                         <div class="card-body p-2 text-center">
                             <p class="mb-2 fw-bold text-truncate" style="font-size: 0.95rem;">{{ movie.title }}</p>
@@ -153,17 +157,20 @@
 
             <div class="tab-pane fade" id="following" role="tabpanel">
                 <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
-                    {% for i in "12345" %}
+                    {% for followed in following %}
                     <div class="card rounded-0 p-3 text-center" style="width: 150px; border: var(--wireframe-border);">
                         <div class="rounded-circle bg-light mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 65px; height: 65px; border: 1px solid #ccc;">
                             <i class="bi bi-person fs-3 text-muted"></i>
                         </div>
-                        <p class="mb-3 fw-bold text-truncate" style="font-size: 0.9rem;">@username_{{ i }}</p>
-                        
-                        {% if is_own_profile %}
-                        <button class="btn btn-sm btn-outline-danger w-100 rounded-0" style="font-size: 0.75rem;">Unfollow</button>
+                        <a href="{% url 'movie_app:view_profile' followed.user.username%}">
+                        <p class="mb-3 fw-bold text-truncate" style="font-size: 0.9rem;">@{{ followed.user.username }}</p>
+                        </a>
+                        {% if followed.user.id == user_profile.user.id %}
+                            <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">You!</button>
+                        {% elif followed in user_profile.follow_list.all %}
+                            <button id ="{{ followed.user.username}}" class="btn btn-sm btn-outline-danger w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Unfollow</button>
                         {% else %}
-                        <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">Follow</button>
+                            <button id ="{{ followed.user.username}}" class="btn btn-sm btn-outline-primary w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Follow</button>
                         {% endif %}
                     </div>
                     {% endfor %}
@@ -172,14 +179,21 @@
 
             <div class="tab-pane fade" id="followers" role="tabpanel">
                 <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
-                    {% for i in "123" %}
+                    {% for follower in followers %}
                     <div class="card rounded-0 p-3 text-center" style="width: 150px; border: var(--wireframe-border);">
                         <div class="rounded-circle bg-light mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 65px; height: 65px; border: 1px solid #ccc;">
                             <i class="bi bi-person fs-3 text-muted"></i>
                         </div>
-                        <p class="mb-3 fw-bold text-truncate" style="font-size: 0.9rem;">@follower_{{ i }}</p>
-                        
-                        <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">Follow</button>
+                        <a href="{% url 'movie_app:view_profile' follower.user.username%}">
+                        <p class="mb-3 fw-bold text-truncate" style="font-size: 0.9rem;">@{{ follower.user.username }}</p>
+                        </a>
+                        {% if follower.user.id == user_profile.user.id %}
+                            <button class="btn btn-sm btn-outline-primary w-100 rounded-0" style="font-size: 0.75rem;">You!</button>
+                        {% elif follower in user_profile.follow_list.all %}
+                            <button id ="{{ follower.user.username}}" class="btn btn-sm btn-outline-danger w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Unfollow</button>
+                        {% else %}
+                            <button id ="{{ follower.user.username}}" class="btn btn-sm btn-outline-primary w-100 rounded-0 follow-btn" style="font-size: 0.75rem;">Follow</button>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -236,14 +250,31 @@
     {% load static %}
     <script src="{% static 'js/helpers.js' %}"></script>
     <script>
-        function afterFunc(button){
+        function afterFuncWatchlist(button){
             button.parentNode.parentNode.remove()
+        }
+
+        function afterFuncFollow(button){
+            if (button.innerText === 'Follow') {
+                // change to unfollow button
+                button.innerText = 'Unfollow';
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-outline-danger');
+            } else {
+                // change back to follow state
+                button.innerText = 'Follow';
+                button.classList.remove('btn-outline-danger');
+                button.classList.add('btn-primary');
+            } 
+            location.reload()
         }
         
         document.addEventListener("DOMContentLoaded", function() {
             setUpEditReviews();
 
-             const btnlist = document.getElementsByClassName('small-nav');
+            setUpFollowButtons(afterFuncFollow, "{{ user_profile.user.id }}")
+
+            const btnlist = document.getElementsByClassName('small-nav');
         
             if (btnlist) {
                 for (const button of btnlist) {
@@ -263,7 +294,7 @@
                 };
             }
 
-            setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
+            setUpWatchListButtons(afterFuncWatchlist, "{{ user_profile.user.id }}")
             
             // star rating code
             const ratingContainers = document.getElementsByClassName('stars');
@@ -316,20 +347,6 @@
                 });
             }
 
-            const followBtn = document.getElementById('mainFollowBtn');
-            if (followBtn) {
-                followBtn.addEventListener('click', function() {
-                    if (this.innerText === 'Follow') {
-                        this.innerText = 'Unfollow';
-                        this.classList.remove('btn-primary');
-                        this.classList.add('btn-outline-secondary');
-                    } else {
-                        this.innerText = 'Follow';
-                        this.classList.remove('btn-outline-secondary');
-                        this.classList.add('btn-primary');
-                    }
-                });
-            }
             // save bio
             const saveBioBtn = document.getElementById('saveBioBtn');
             if (saveBioBtn) {

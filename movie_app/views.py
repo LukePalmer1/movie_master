@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST
 
 from movie_app.forms import UserForm, UserProfileForm
-from movie_app.models import UserProfile, Rating, Movie
+from movie_app.models import UserProfile, Rating, Movie, Follow
 
 def user_login(request):
     error = None
@@ -119,26 +119,29 @@ def view_profile(request, user_slug):
     ratings = Rating.objects.filter(user_profile=profile).select_related('movie')
 
     already_following = False
-    if request.user.is_authenticated and request.user != profile_user:
-        try:
-            viewer_profile = UserProfile.objects.get(user=request.user)
-            already_following = viewer_profile.follow_list.filter(pk=profile.pk).exists()
-        except UserProfile.DoesNotExist:
-            pass
+    viewer_profile = UserProfile.objects.get(user=request.user)
+    already_following = Follow.objects.filter(follower_user=viewer_profile, follows_user=profile).exists()
 
     is_own_profile = request.user == profile_user
 
-    following = profile.follow_list.all()
-    followers = UserProfile.objects.filter(follow_list__in=[profile])
+    following_list = Follow.objects.filter(follower_user_id=profile.pk)
+    following_name_list = []
+    for follow in following_list:
+        following_name_list.append(UserProfile.objects.get(pk=follow.following_user_id))
+
+    follower_list = Follow.objects.filter(follows_user_id=profile.pk)
+    follower_name_list = []
+    for follow in follower_list:
+        follower_name_list.append(UserProfile.objects.get(pk=follow.follower_user_id))
 
     context = {
         'profile': profile,
-        'user_profile': get_object_or_404(UserProfile, user=request.user),
+        'user_profile': viewer_profile,
         'ratings': ratings,
         'already_following': already_following,
         'is_own_profile': is_own_profile,
-        'following': following,
-        'followers': followers,
+        'followers': follower_name_list,
+        'following': following_name_list,
     }
     return render(request, 'movie_app/profile.html', context)
 
@@ -173,12 +176,18 @@ def movie_detail(request, movieID):
         except UserProfile.DoesNotExist:
             pass
 
+    follow_list = Follow.objects.filter(follower_user_id=profile.pk)
+    follow_name_list = []
+    for follow in follow_list:
+        follow_name_list.append(follow.follows_user_id)
+
     context = {
         'movie': movie,
         'ratings': ratings,
         'profile': profile,
         'user_rating': user_rating,
         'in_watchlist': in_watchlist,
+        'follow_list': follow_name_list,
     }
     return render(request, 'movie_app/movie_detail.html', context)
 
@@ -195,19 +204,18 @@ def toggle_watchlist(request, movieID):
     return JsonResponse({'success': True})
 
 @login_required
-def follow_user(request, user_slug):
-    if request.method == 'POST':
-        target_user    = get_object_or_404(User, username=user_slug)
-        target_profile = get_object_or_404(UserProfile, user=target_user)
-        my_profile     = get_object_or_404(UserProfile, user=request.user)
+@require_POST
+def toggle_follow(request, user_slug):
+    target_user    = get_object_or_404(User, username=user_slug)
+    target_profile = get_object_or_404(UserProfile, user=target_user)
+    my_profile     = get_object_or_404(UserProfile, user__id=request.POST.get("profile"))
 
-        if target_user != request.user:
-            if my_profile.follow_list.filter(pk=target_profile.pk).exists():
-                my_profile.follow_list.remove(target_profile)
-            else:
-                my_profile.follow_list.add(target_profile)
-
-    return redirect(reverse('movie_app:view_profile', kwargs={'user_slug': user_slug}))
+    if target_user != request.user:
+        if Follow.objects.filter(follower_user=my_profile, follows_user=target_profile).exists():
+            Follow.objects.get(follower_user=my_profile, follows_user=target_profile).delete()
+        else:
+            Follow.objects.create(follower_user=my_profile, follows_user=target_profile)
+    return JsonResponse({'success':True})
 
 @login_required
 @require_POST

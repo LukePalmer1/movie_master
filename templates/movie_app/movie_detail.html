@@ -71,15 +71,22 @@
                 <div class="d-flex flex-column gap-3">
                     {% for rating in ratings %}
                     <div class="p-3 bg-light" style="border: var(--wireframe-border);">
-                        <a href="{% url 'movie_app:view_profile' rating.user_profile.user.username%}" class="link-underline link-underline-opacity-0">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div class="d-flex align-items-center gap-2">
+                                <a href="{% url 'movie_app:view_profile' rating.user_profile.user.username%}" class="link-underline link-underline-opacity-0">
                                 <span class="fw-bold small">{{ rating.user_profile.user.username }}</span>
-                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2 review-follow-btn" style="font-size: 0.7rem;">Follow</button>
+                                </a>
+                                {% csrf_token %}
+                                {% if rating.user_profile.user.id == profile.user.id %}
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2" style="font-size: 0.7rem;">You!</button>
+                                {% elif not rating.user_profile.user.id in follow_list%}
+                                <button id="{{rating.user_profile.user.username}}" type="button" class="btn btn-outline-primary btn-sm rounded-pill py-0 px-2 follow-btn" style="font-size: 0.7rem;">Follow</button>
+                                {% else %}
+                                <button id="{{rating.user_profile.user.username}}" type="button" class="btn btn-outline-secondary btn-sm rounded-pill py-0 px-2 follow-btn" style="font-size: 0.7rem;">Unfollow</button>
+                                {% endif %}
                             </div>
                             <span class="badge border text-dark bg-white"><i class="bi bi-star-fill text-warning me-1"></i> {{ rating.rating }} / 5</span>
                         </div>
-                        </a>
                         <p class="mb-0 text-muted small">{{ rating.review }}</p>
                     </div>
                     {% endfor %}
@@ -92,7 +99,7 @@
 {% load static %}
 <script src="{% static 'js/helpers.js' %}"></script>
 <script>
-    function afterFunc(button){
+    function afterFuncWatchlist(button){
         if (button.innerText === 'Add To Watchlist') {
             // change to remove button
             button.innerText = 'Remove From Watchlist';
@@ -105,63 +112,27 @@
             button.classList.add('btn-outline-secondary');
         }
     }
+
+    function afterFuncFollow(button){
+        if (button.innerText === 'Follow') {
+            // change to unfollow button
+            button.innerText = 'Unfollow';
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-outline-secondary');
+        } else {
+            // change back to follow state
+            button.innerText = 'Follow';
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-outline-primary');
+        }
+    }
     
     document.addEventListener("DOMContentLoaded", function() {
-        setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
+        setUpWatchListButtons(afterFuncWatchlist, "{{ profile.user.id }}")
 
-        const ratingContainer = document.getElementById('interactive-rating');
-        if (ratingContainer) {
-            const stars = ratingContainer.querySelectorAll('i');
-            const ratingInput = document.getElementById('rating-input');
-            const ratingDisplay = document.getElementById('rating-display');
+        setUpStarRating()
 
-            function updateStarVisuals(value) {
-                stars.forEach((star, index) => {
-                    star.className = 'bi text-warning '; 
-                    if (value >= index + 1) star.className += 'bi-star-fill'; 
-                    else if (value >= index + 0.5) star.className += 'bi-star-half'; 
-                    else star.className += 'bi-star';      
-                });
-            }
-
-            stars.forEach((star, index) => {
-                star.addEventListener('mousemove', function(e) {
-                    const rect = star.getBoundingClientRect();
-                    const isHalf = (e.clientX - rect.left) < (rect.width / 2);
-                    updateStarVisuals(index + (isHalf ? 0.5 : 1));
-                });
-
-                star.addEventListener('click', function(e) {
-                    const rect = star.getBoundingClientRect();
-                    const isHalf = (e.clientX - rect.left) < (rect.width / 2);
-                    const finalValue = index + (isHalf ? 0.5 : 1);
-                    ratingInput.value = finalValue; 
-                    ratingDisplay.innerText = finalValue + ' / 5'; 
-                });
-            });
-
-            ratingContainer.addEventListener('mouseleave', function() {
-                updateStarVisuals(parseFloat(ratingInput.value));
-            });
-        }
-
-        // follow button logic
-        const reviewFollowBtns = document.querySelectorAll('.review-follow-btn');
-        reviewFollowBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (this.innerText === 'Follow') {
-                    // change to unfollow button
-                    this.innerText = 'Unfollow';
-                    this.classList.remove('btn-outline-primary');
-                    this.classList.add('btn-outline-secondary');
-                } else {
-                    // change back to follow state
-                    this.innerText = 'Follow';
-                    this.classList.remove('btn-outline-secondary');
-                    this.classList.add('btn-outline-primary');
-                }
-            });
-        });
+        setUpFollowButtons(afterFuncFollow, "{{ profile.user.id }}", "{{ profile.user.username }}")
 
     });
 </script>

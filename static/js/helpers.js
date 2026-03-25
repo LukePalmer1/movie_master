@@ -158,3 +158,34 @@ function setUpStarRating() {
     });
     return updateStarVisuals;
 }
+
+function setUpFollowButtons(afterFunc, userID){
+    const followBtns = document.getElementsByClassName('follow-btn');
+    for(const button of followBtns) {
+        button.addEventListener('click', function() {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            button.disabled = true;
+            fetch("/".concat(String(button.id).concat("/toggle-follow/")),{
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'profile=' + encodeURIComponent(userID),
+
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    afterFunc(button);
+                }
+            })
+            .catch(() => {
+                alert("issue")
+            })  
+            .finally(() => {
+                button.disabled = false;
+            })
+        });
+    };
+}

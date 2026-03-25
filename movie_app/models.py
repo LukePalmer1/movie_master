@@ -18,7 +18,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     biography = models.CharField(max_length=500)
     watch_list = models.ManyToManyField(Movie, blank=True)
-    follow_list = models.ManyToManyField("self", blank=True)
 
     def __str__(self):
         return self.user.username
@@ -32,3 +31,7 @@ class Rating(models.Model):
 
     def __str__(self):
         return f"{self.user_profile}'s review of {self.movie}"
+
+class Follow(models.Model):
+    follower_user = models.ForeignKey(UserProfile, related_name="follower", on_delete=models.CASCADE)
+    follows_user = models.ForeignKey(UserProfile, related_name="follows", on_delete=models.CASCADE)

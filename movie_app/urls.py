@@ -40,6 +40,6 @@ urlpatterns = [
     path('movie-detail/<int:movieID>/', views.movie_detail, 
         name='movie_detail'),
 
-    path('profile/<slug:user_slug>/follow/', views.follow_user, 
-        name='follow_user'),
+    path('<slug:user_slug>/toggle-follow/', views.toggle_follow, 
+        name='toggle_follow'),
 ]
