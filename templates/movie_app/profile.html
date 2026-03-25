@@ -39,11 +39,15 @@
                 {% else %}
                     <div class="d-flex flex-column justify-content-center h-100">
                         <h5 class="text-muted mb-1">User</h5>
+                        <h2 class="fw-bold" style="color: var(--primary-blue);">{{ profile_user.username }}</h2>
                         
                         <div class="d-flex align-items-center gap-3">
-                            <h2 class="fw-bold mb-0" style="color: var(--primary-blue);">[USERNAME]</h2>
-                            
-                            <button type="button" id="mainFollowBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-4">Follow</button>
+                            <form action="{% url 'movie_app:follow_user' user_slug=profile_user.username %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" id="mainFollowBtn" class="btn btn-primary btn-sm fw-bold rounded-pill px-4">
+                                    {% if already_following %}Unfollow{% else %}Follow{% endif %}
+                                </button>
+                            </form>
                         </div>
                         
                         <p class="mt-2 text-muted small">
@@ -56,12 +60,15 @@
 
             <div class="col-md-6 d-flex flex-column ps-md-4 border-md-start">
                 <h5 class="fw-bold mb-3 border-bottom pb-2">About Me</h5>
-                <div class="d-flex flex-column flex-grow-1">
+                <div class="d-flex flex-column flex-grow-1"> 
                     {% if is_own_profile %}
-                        <textarea class="form-control rounded-0 mb-3 flex-grow-1" placeholder="Write something about yourself..." style="resize: none; border: var(--wireframe-border); min-height: 100px;"></textarea>
-                        <button class="btn text-white w-100 fw-bold rounded-0" style="background-color: var(--primary-blue);">Save Profile</button>
+                        {% csrf_token %}
+                        <textarea id="bioTextarea" class="form-control rounded-0 mb-3 flex-grow-1" placeholder="Write something about yourself..." 
+                            style="resize: none; border: var(--wireframe-border); min-height: 100px; text-align: left; direction: ltr;">{{ profile.biography }}</textarea>
+                        <div id="bioFeedback" class="mb-2 small fw-bold" style="display:none;"></div>
+                        <button id="saveBioBtn" class="btn text-white w-100 fw-bold rounded-0" style="background-color: var(--primary-blue);">Save Profile</button>
                     {% else %}
-                        <p class="text-muted">[User's bio goes here]</p>
+                        <p class="text-muted">{{ profile.biography }}</p>
                     {% endif %}
                 </div>
             </div>
@@ -72,16 +79,16 @@
     <div>
         <ul class="nav nav-tabs mb-4 border-bottom" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold rounded-0" id="rated-tab" data-bs-toggle="tab" data-bs-target="#rated" type="button" role="tab" style="color: var(--primary-blue);">Rated Movies</button>
+                <button class="nav-link fw-bold rounded-0 active small-nav" id="rated-tab" data-bs-toggle="tab" data-bs-target="#rated" type="button" role="tab" style="color: var(--primary-blue);">Rated Movies</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab">Watchlist</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab">Watchlist</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab">Following</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="following-tab" data-bs-toggle="tab" data-bs-target="#following" type="button" role="tab">Following</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold rounded-0 text-muted" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab">Followers</button>
+                <button class="nav-link fw-bold rounded-0 text-muted small-nav" id="followers-tab" data-bs-toggle="tab" data-bs-target="#followers" type="button" role="tab">Followers</button>
             </li>
         </ul>
         
@@ -89,17 +96,17 @@
             
             <div class="tab-pane fade show active" id="rated" role="tabpanel">
                 <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
-                    {% for i in "12345678" %}
+                    {% for rating in ratings %}
                     <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
                         <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
-                            <img src="https://placehold.co/300x450/e9ecef/495057?text=Poster" alt="Poster" class="w-100 h-100" style="object-fit: cover;">
+                            <img src="{{rating.movie.poster_path}}" alt="Poster" class="w-100 h-100" style="object-fit: cover;">
                         </div>
                         <div class="card-body p-2 d-flex flex-column">
-                            <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">[Movie Title]</p>
+                            <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ rating.movie.title }}</p>
                             <div class="d-flex justify-content-between align-items-center mt-1 mb-2 bg-light p-1" style="border: 1px solid #ccc;">
                                 <div class="d-flex align-items-center">
                                     <small class="fw-bold me-2" style="font-size: 0.7rem;">RATING:</small>
-                                    <div class="text-warning" style="font-size: 0.75rem;">
+                                    <div id="{{rating.rating}}" class="text-warning stars" style="font-size: 0.75rem;">
                                         <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
                                     </div>
                                 </div>
@@ -110,7 +117,7 @@
                                 {% endif %}
                             </div>
                             <p class="text-muted mb-0" style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                "[Template snippet of the user's review...]"
+                                "{{ rating.review }}"
                             </p>
                         </div>
                     </div>
@@ -120,15 +127,16 @@
 
             <div class="tab-pane fade" id="watchlist" role="tabpanel">
                 <div class="d-flex flex-wrap justify-content-center justify-content-md-start" style="gap: 20px;">
-                    {% for i in "1234" %}
+                    {% for movie in profile.watch_list.all %}
                     <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
                         <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
-                            <img src="https://placehold.co/300x450/e9ecef/495057?text=Poster" alt="Poster" class="w-100 h-100" style="object-fit: cover;">
+                            <img src="{{ movie.poster_path }}" alt="{{ movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
                         </div>
                         <div class="card-body p-2 text-center">
-                            <p class="mb-2 fw-bold text-truncate" style="font-size: 0.95rem;">[Movie Title]</p>
+                            <p class="mb-2 fw-bold text-truncate" style="font-size: 0.95rem;">{{ movie.title }}</p>
                             {% if is_own_profile %}
-                            <button class="btn btn-sm btn-outline-danger w-100 rounded-0" style="font-size: 0.75rem fw-bold;">Remove</button>
+                            {% csrf_token %}
+                            <button id = "{{ movie.movieID }}" class="watchlistButton btn btn-sm btn-outline-danger w-100 rounded-0" style="font-size: 0.75rem fw-bold;">Remove</button>
                             {% endif %}
                         </div>
                     </div>
@@ -205,10 +213,52 @@
         </div>
     </div>
 
+    {% load static %}
+    <script src="{% static 'js/helpers.js' %}"></script>
     <script>
+        function afterFunc(button){
+            button.parentNode.parentNode.remove()
+        }
+        
         document.addEventListener("DOMContentLoaded", function() {
+
+             const btnlist = document.getElementsByClassName('small-nav');
+        
+            if (btnlist) {
+                for (const button of btnlist) {
+                    button.addEventListener('click', function() {
+                        for (const btn of btnlist){
+                            try{
+                                btn.classList.remove("active")
+                                btn.classList.add("text-muted")
+                                btn.style = ""
+                            }
+                            catch{}
+                        }
+                        button.classList.add("active");
+                        button.classList.remove("text-muted")
+                        button.style = "color: var(--primary-blue);"
+                    });
+                };
+            }
+
+            setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
             
             // star rating code
+            const ratingContainers = document.getElementsByClassName('stars');
+            if (ratingContainers) {
+                for (const container of ratingContainers){
+                    const stars = container.querySelectorAll('i');
+                    const value = parseInt(container.id)
+                    stars.forEach((star, index) => {
+                        star.className = 'bi'; 
+                        if (value >= index + 1) star.classList.add('bi-star-fill'); 
+                        else if (value >= index + 0.5) star.classList.add('bi-star-half'); 
+                        else star.classList.add('bi-star');      
+                    });
+                }
+            }
+
             const ratingContainer = document.getElementById('interactive-rating');
             if (ratingContainer) {
                 const stars = ratingContainer.querySelectorAll('i');
@@ -262,7 +312,49 @@
                     }
                 });
             }
+            // save bio
+            const saveBioBtn = document.getElementById('saveBioBtn');
+            if (saveBioBtn) {
+                saveBioBtn.addEventListener('click', function() {
+                    const bio = document.getElementById('bioTextarea').value;
+                    const feedback = document.getElementById('bioFeedback');
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
+                    saveBioBtn.disabled = true;
+                    saveBioBtn.textContent = 'Saving...';
+
+                    fetch("{% url 'movie_app:save_bio' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'biography=' + encodeURIComponent(bio),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        feedback.style.display = 'block';
+                        if (data.success) {
+                            feedback.textContent = 'Profile saved!';
+                            feedback.style.color = 'green';
+                        } else {
+                            feedback.textContent = (data.error || 'Something went wrong.');
+                            feedback.style.color = 'red';
+                        }
+                        setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+                    })
+                    .catch(() => {
+                        feedback.style.display = 'block';
+                        feedback.textContent = 'Network error. Please try again.';
+                        feedback.style.color = 'red';
+                        setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+                    })
+                    .finally(() => {
+                        saveBioBtn.disabled = false;
+                        saveBioBtn.textContent = 'Save Profile';
+                    });
+                });
+            }
         });
     </script>
 

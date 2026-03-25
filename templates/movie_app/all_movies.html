@@ -9,14 +9,16 @@
             <p class="text-muted small mb-0">Discover and rate movies from the database.</p>
         </div>
         
-        <div class="d-flex gap-2 mt-3 mt-md-0">
+        <form method="get" action="{% url 'movie_app:all_movies' %}" class="d-flex gap-2 mt-3 mt-md-0">
             <div class="input-group" style="width: 250px;">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control border-start-0 ps-0" placeholder="Search movies...">
+                <input type="text" class="form-control border-start-0 ps-0" placeholder="Search movies..." name="q" value="{{ query }}">
             </div>
             
-            <select class="form-select" style="width: 130px; overflow-y: auto; max-height: 200px;">
-                <option selected>All Years</option>
+            <select class="form-select" name="year" style="width: 130px; overflow-y: auto; max-height: 200px;">
+                <option value="all" selected>All Years</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
                 <option value="2024">2024</option>
                 <option value="2023">2023</option>
                 <option value="2022">2022</option>
@@ -33,32 +35,49 @@
                 <option value="2011">2011</option>
                 <option value="2010">2010</option>
                 <option value="2009">2009</option>
+                <option value="2008">2008</option>
+                <option value="2007">2007</option>
+                <option value="2006">2006</option>
+                <option value="2005">2005</option>
+                <option value="2004">2004</option>
+                <option value="2003">2003</option>
+                <option value="2002">2002</option>
+                <option value="2001">2001</option>
+                <option value="2000">2000</option>
                 <option value="older">Older...</option>
             </select>
-        </div>
+            <button type="submit" class="btn btn-primary rounded-0">Search</button>
+        </form>
     </div>
 
     <hr class="mb-4">
 
     <div class="d-flex flex-wrap justify-content-center flex-grow-1" style="gap: 20px;">
         
-        {% for i in "1234567890123456" %}
+        {% for movie in movies %}
         <div class="card rounded-0" style="width: 190px; border: var(--wireframe-border);">
             <div class="position-relative bg-light" style="aspect-ratio: 2 / 3;">
-                <img src="https://placehold.co/300x450/e9ecef/495057?text=Poster" alt="Movie Poster placeholder" class="w-100 h-100" style="object-fit: cover;">
-                <button class="btn btn-light rounded-circle position-absolute shadow-sm d-flex align-items-center justify-content-center" style="top: 8px; right: 8px; width: 30px; height: 30px; border: 1px solid #ccc; padding: 0;">
+                <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
+                <img src="{{ movie.poster_path }}" alt="{{ movie.title }} Movie Poster" class="w-100 h-100" style="object-fit: cover;">
+                </a>
+                {% csrf_token %}
+                <button id = "{{ movie.movieID }}" class="btn btn-light rounded-circle position-absolute shadow-sm d-flex align-items-center justify-content-center watchlistButton" style="top: 8px; right: 8px; width: 30px; height: 30px; border: 1px solid #ccc; padding: 0;">
+                    {% if not movie in profile.watch_list.all %}
                     <i class="bi bi-plus-lg"></i>
+                    {% else %}
+                    <i class="bi bi-dash-lg"></i>
+                    {% endif %}
                 </button>
             </div>
             <div class="card-body p-2 d-flex flex-column">
-                <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">[Movie Title]</p>
+                <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ movie.title }}</p>
                 <div class="d-flex align-items-center mt-1 mb-1">
                     <i class="bi bi-star-fill text-warning me-1" style="font-size: 0.8rem;"></i>
-                    <small class="fw-bold me-1">[0.0]</small>
-                    <small class="text-muted" style="font-size: 0.75rem;">([Count])</small>
+                    <small class="fw-bold me-1">{{ movie.average_rating }}</small>
+                    <small class="text-muted" style="font-size: 0.75rem;">({{ movie.no_of_ratings }})</small>
                 </div>
                 <p class="text-muted mb-0" style="font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                    [Movie overview fetched from the API will be here.]
+                    {{ movie.overview }}
                 </p>
             </div>
         </div>
@@ -68,15 +87,48 @@
     
     <nav class="mt-5 pb-5 w-100 d-flex justify-content-center">
         <ul class="pagination shadow-sm">
-            <li class="page-item disabled"><a class="page-link text-secondary" href="#">Previous</a></li>
-            <li class="page-item active"><a class="page-link" href="#" style="background-color: var(--primary-blue); border-color: var(--primary-blue);">1</a></li>
-            <li class="page-item"><a class="page-link text-dark" href="#">2</a></li>
-            <li class="page-item"><a class="page-link text-dark" href="#">3</a></li>
+            {% if not movies.has_previous %}
+            <li class="page-item disabled"><a class="page-link text-secondary" href="">Previous</a></li>
+            {% else %}
+            <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' movies.previous_page_number %}?{{ request.GET.urlencode }}">Previous</a></li>
+            <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' 1 %}?{{ request.GET.urlencode }}">1</a></li>
             <li class="page-item disabled"><span class="page-link text-secondary">...</span></li>
-            <li class="page-item"><a class="page-link text-dark" href="#">428</a></li>
-            <li class="page-item"><a class="page-link text-dark" href="#">Next</a></li>
+            {% endif %}
+
+            <li class="page-item active"><a class="page-link" href="{% url 'movie_app:all_movies' page %}?{{ request.GET.urlencode }}" style="background-color: var(--primary-blue); border-color: var(--primary-blue);">{{ page }}</a></li>
+
+            {% if not movies.has_next %}
+            <li class="page-item disabled"><a class="page-link text-secondary" href="">Next</a></li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link text-secondary">...</span></li>
+            <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' num_pages %}?{{ request.GET.urlencode }}">{{ num_pages }}</a></li>
+            <li class="page-item"><a class="page-link text-dark" href="{% url 'movie_app:all_movies' movies.next_page_number %}?{{ request.GET.urlencode }}">Next</a></li>
+            {% endif %}
         </ul>
     </nav>
     
 </div>
+
+{% load static %}
+<script src="{% static 'js/helpers.js' %}"></script>
+<script>
+    function afterFunc(button){
+        sign = button.querySelectorAll('i')[0]
+        if (sign.classList.contains('bi-plus-lg')) {
+            // change to minus
+            sign.classList.remove('bi-plus-lg');
+            sign.classList.add('bi-dash-lg');
+        } 
+        else {
+            // change to plus
+            sign.classList.remove('bi-dash-lg');
+            sign.classList.add('bi-plus-lg');
+        }
+    }
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        setUpWatchListButtons(afterFunc, "{{ profile.user.id }}")
+    });
+    
+</script>
 {% endblock %}

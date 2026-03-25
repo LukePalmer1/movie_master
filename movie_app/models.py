@@ -8,6 +8,7 @@ class Movie(models.Model):
     overview = models.CharField(max_length=1000)
     poster_path = models.URLField(max_length=100)
     average_rating = models.FloatField(max_length=4, default=0)
+    no_of_ratings = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
@@ -26,8 +27,8 @@ class UserProfile(models.Model):
 class Rating(models.Model):
     user_profile = models.ForeignKey(UserProfile, on_delete=models.SET(-1)) # Set id = -1, will be handled later as q deleted user
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE) 
-    rating = models.IntegerField()
-    review = models.CharField(max_length=500)
+    rating = models.FloatField(default = 0.0)
+    review = models.CharField(default="None", max_length=500)
 
     def __str__(self):
         return f"{self.user_profile}'s review of {self.movie}"

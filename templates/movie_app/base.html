@@ -14,25 +14,25 @@
     <div class="container-fluid p-0 main-container">
         
         <nav class="navbar navbar-expand-lg navbar-custom px-4">
-            <a class="navbar-brand fs-3" href="#">MovieMaster</a>
+            <a class="navbar-brand fs-3" href="{% url 'movie_app:dashboard' %}">MovieMaster</a>
             
             <div class="collapse navbar-collapse d-flex justify-content-end">
                 {% if user.is_authenticated %}
-                    <form class="d-flex me-3">
-                        <input class="form-control me-2 form-control-sm" type="search" placeholder="Search movies..." aria-label="Search">
+                    <form method = "get" action="{% url 'movie_app:all_movies' %}" class="d-flex me-3">
+                        <input name = "q" class="form-control me-2 form-control-sm" type="search" placeholder="Search movies..." aria-label="Search">
                         <button class="btn btn-light btn-sm" type="submit"><i class="bi bi-search"></i></button>
                     </form>
                     <ul class="navbar-nav">
-                        <li class="nav-item"><a class="nav-link" href="#">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">All Movies</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Profile</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Sign Out</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:dashboard' %}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:all_movies' %}">All Movies</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:view_profile' user_slug=request.user.username %}">Profile</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:logout' %}">Sign Out</a></li>
                     </ul>
                 {% else %}
                     <ul class="navbar-nav">
                         <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Sign Up</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:login' %}">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'movie_app:sign_up' %}">Sign Up</a></li>
                     </ul>
                 {% endif %}
             </div>
