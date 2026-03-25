@@ -3,8 +3,9 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
 
 from movie_app.forms import UserForm, UserProfileForm
 from movie_app.models import UserProfile, Rating, Movie
@@ -210,3 +211,14 @@ def follow_user(request, user_slug):
                 my_profile.follow_list.add(target_profile)
 
     return redirect(reverse('movie_app:view_profile', kwargs={'user_slug': user_slug}))
+
+@login_required
+@require_POST
+def save_bio(request):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    bio = request.POST.get('biography', '').strip()
+    if len(bio) > 500:
+        return JsonResponse({'success': False, 'error': 'Bio must be 500 characters or fewer.'}, status=400)
+    profile.biography = bio
+    profile.save()
+    return JsonResponse({'success': True, 'biography': profile.biography})
