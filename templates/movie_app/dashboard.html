@@ -36,7 +36,6 @@
                     </div>
                 </div>
             </div>
-            </a>
             {% endfor %}
 
             <div class="card rounded-0 flex-shrink-0 d-flex flex-column align-items-center justify-content-center" style="width: 160px; border: 2px dashed #adb5bd; background-color: transparent; cursor: pointer;">
@@ -69,7 +68,6 @@
                         {% endif %}
                     </button>
                 </div>
-                <a href="{% url 'movie_app:movie_detail' movie.movieID %} ">
                 <div class="card-body p-2 d-flex flex-column">
                     <p class="mb-0 fw-bold text-truncate" style="font-size: 0.95rem;">{{ movie.title }}</p>
                     <div class="d-flex align-items-center mt-1 mb-1">
@@ -81,7 +79,6 @@
                         {{ movie.overview }}
                     </p>
                 </div>
-                </a>
             </div>
             {% endfor %}
         </div>

@@ -128,18 +128,17 @@ def view_profile(request, user_slug):
 
     is_own_profile = request.user == profile_user
 
-    if request.POST:
-        removed_movie = get_object_or_404(Movie, movieID__iexact=request.POST.get("removed_movie"))
-
-        if removed_movie:
-            profile.watch_list.remove(removed_movie.movieID)
+    following = profile.follow_list.all()
+    followers = UserProfile.objects.filter(follow_list__in=[profile])
 
     context = {
         'profile': profile,
-        'profile_user': profile_user,
+        'user_profile': get_object_or_404(UserProfile, user=request.user),
         'ratings': ratings,
         'already_following': already_following,
         'is_own_profile': is_own_profile,
+        'following': following,
+        'followers': followers,
     }
     return render(request, 'movie_app/profile.html', context)
 
@@ -152,6 +151,23 @@ def movie_detail(request, movieID):
     if request.user.is_authenticated:
         try:
             profile = UserProfile.objects.get(user=request.user)
+            if request.POST:
+                rating = request.POST.get("rating")
+                review = request.POST.get("review")
+                new_rating, created = Rating.objects.get_or_create(user_profile = profile, movie = movie)
+                new_rating.rating = rating
+                new_rating.review = review
+                new_rating.save()
+
+                movie_ratings = Rating.objects.filter(movie=movie)
+                total = 0
+                if created:
+                    movie.no_of_ratings += 1
+                for cur_rating in movie_ratings:
+                    total += cur_rating.rating
+                movie.average_rating = total
+                movie.save()
+
             user_rating = Rating.objects.filter(user_profile=profile, movie=movie).first()
             in_watchlist = profile.watch_list.filter(pk=movie.pk).exists()
         except UserProfile.DoesNotExist:
