@@ -60,10 +60,13 @@
 
             <div class="col-md-6 d-flex flex-column ps-md-4 border-md-start">
                 <h5 class="fw-bold mb-3 border-bottom pb-2">About Me</h5>
-                <div class="d-flex flex-column flex-grow-1">
+                <div class="d-flex flex-column flex-grow-1"> 
                     {% if is_own_profile %}
-                        <textarea class="form-control rounded-0 mb-3 flex-grow-1" placeholder="Write something about yourself..." style="resize: none; border: var(--wireframe-border); min-height: 100px;"></textarea>
-                        <button class="btn text-white w-100 fw-bold rounded-0" style="background-color: var(--primary-blue);">Save Profile</button>
+                        {% csrf_token %}
+                        <textarea id="bioTextarea" class="form-control rounded-0 mb-3 flex-grow-1" placeholder="Write something about yourself..." 
+                            style="resize: none; border: var(--wireframe-border); min-height: 100px; text-align: left; direction: ltr;">{{ profile.biography }}</textarea>
+                        <div id="bioFeedback" class="mb-2 small fw-bold" style="display:none;"></div>
+                        <button id="saveBioBtn" class="btn text-white w-100 fw-bold rounded-0" style="background-color: var(--primary-blue);">Save Profile</button>
                     {% else %}
                         <p class="text-muted">{{ profile.biography }}</p>
                     {% endif %}
@@ -269,7 +272,49 @@
                     }
                 });
             }
+            // save bio
+            const saveBioBtn = document.getElementById('saveBioBtn');
+            if (saveBioBtn) {
+                saveBioBtn.addEventListener('click', function() {
+                    const bio = document.getElementById('bioTextarea').value;
+                    const feedback = document.getElementById('bioFeedback');
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
+                    saveBioBtn.disabled = true;
+                    saveBioBtn.textContent = 'Saving...';
+
+                    fetch("{% url 'movie_app:save_bio' %}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'biography=' + encodeURIComponent(bio),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        feedback.style.display = 'block';
+                        if (data.success) {
+                            feedback.textContent = 'Profile saved!';
+                            feedback.style.color = 'green';
+                        } else {
+                            feedback.textContent = (data.error || 'Something went wrong.');
+                            feedback.style.color = 'red';
+                        }
+                        setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+                    })
+                    .catch(() => {
+                        feedback.style.display = 'block';
+                        feedback.textContent = 'Network error. Please try again.';
+                        feedback.style.color = 'red';
+                        setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+                    })
+                    .finally(() => {
+                        saveBioBtn.disabled = false;
+                        saveBioBtn.textContent = 'Save Profile';
+                    });
+                });
+            }
         });
     </script>
 
