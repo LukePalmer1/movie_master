@@ -3,10 +3,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.views.decorators.http import require_POST
 
 from movie_app.forms import UserForm, UserProfileForm
-from movie_app.models import UserProfile, Rating, Movie
+from movie_app.models import UserProfile, Rating, Movie, Follow
 
 def user_login(request):
     error = None
@@ -17,7 +19,7 @@ def user_login(request):
         if user:
             if user.is_active:
                 login(request, user)
-                return redirect('movie_app:dashboard')
+                return redirect(reverse('movie_app:dashboard'))
             else:
                 error = "Your account is disabled."
         else:
@@ -67,17 +69,17 @@ def user_logout(request):
 @login_required
 def dashboard(request):
     profile = get_object_or_404(UserProfile, user=request.user)
-    ratings = Rating.objects.filter(user_profile=profile).select_related('movie')
-    watchlist = profile.watch_list.all()
+    ratings = Rating.objects.filter(user_profile=profile).select_related('movie')[:7]
+    movies = Movie.objects.all()[:8]
 
     context = {
         'profile': profile,
         'ratings': ratings,
-        'watchlist': watchlist,
+        'movies' : movies,
     }
     return render(request, 'movie_app/dashboard.html', context)
 
-def all_movies(request):
+def all_movies(request, page=1):
     movies = Movie.objects.all()
 
     query = request.GET.get('q', '').strip()
@@ -85,15 +87,28 @@ def all_movies(request):
         movies = movies.filter(title__icontains=query)
 
     year = request.GET.get('year', '').strip()
-    if year:
-        movies = movies.filter(release_date__startswith=year)
+    if year and year != "all":
+        if year == "older":
+            movies = movies.filter(release_date__startswith="1")
+        else:
+            movies = movies.filter(release_date__startswith=year)
 
     movies = movies.order_by('title')
+    paginator = Paginator(movies, 100)
+    last_page_no = paginator.num_pages
+
+    if page > last_page_no:
+        return redirect(reverse('movie_app:all_movies') + str(last_page_no)  + "?" + request.GET.urlencode())
+    
+    cur_page = paginator.get_page(page)
 
     context = {
-        'movies': movies,
+        'movies': cur_page,
         'query': query,
         'year': year,
+        'num_pages': last_page_no,
+        'page': page,
+        'profile': get_object_or_404(UserProfile, user=request.user)
     }
     return render(request, 'movie_app/all_movies.html', context)
 
@@ -104,20 +119,145 @@ def view_profile(request, user_slug):
     ratings = Rating.objects.filter(user_profile=profile).select_related('movie')
 
     already_following = False
-    if request.user.is_authenticated and request.user != profile_user:
-        try:
-            viewer_profile = UserProfile.objects.get(user=request.user)
-            already_following = viewer_profile.follow_list.filter(pk=profile.pk).exists()
-        except UserProfile.DoesNotExist:
-            pass
+    viewer_profile = UserProfile.objects.get(user=request.user)
+    already_following = Follow.objects.filter(follower_user=viewer_profile, follows_user=profile).exists()
 
     is_own_profile = request.user == profile_user
 
+    following_list = Follow.objects.filter(follower_user_id=profile.pk)
+    following_name_list = []
+    for follow in following_list:
+        following_name_list.append(UserProfile.objects.get(pk=follow.follows_user_id))
+
+    follower_list = Follow.objects.filter(follows_user_id=profile.pk)
+    follower_name_list = []
+    for follow in follower_list:
+        follower_name_list.append(UserProfile.objects.get(pk=follow.follower_user_id))
+
+    user_following_list = Follow.objects.filter(follower_user_id=viewer_profile.pk)
+    user_following_name_list = []
+    for follow in user_following_list:
+        user_following_name_list.append(UserProfile.objects.get(pk=follow.follows_user_id))
+
     context = {
         'profile': profile,
-        'profile_user': profile_user,
+        'user_profile': viewer_profile,
         'ratings': ratings,
         'already_following': already_following,
         'is_own_profile': is_own_profile,
+        'followers': follower_name_list,
+        'following': following_name_list,
+        'user_following': user_following_name_list
     }
     return render(request, 'movie_app/profile.html', context)
+
+def movie_detail(request, movieID):
+    movie = get_object_or_404(Movie, movieID__iexact=movieID)
+    ratings = Rating.objects.filter(movie=movie).select_related('user_profile__user')
+
+    user_rating = None
+    in_watchlist = False
+    if request.user.is_authenticated:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            if request.POST:
+                rating = request.POST.get("rating")
+                review = request.POST.get("review")
+                new_rating, created = Rating.objects.get_or_create(user_profile = profile, movie = movie)
+                new_rating.rating = rating
+                new_rating.review = review
+                new_rating.save()
+
+                movie_ratings = Rating.objects.filter(movie=movie)
+                total = 0
+                if created:
+                    movie.no_of_ratings += 1
+                for cur_rating in movie_ratings:
+                    total += cur_rating.rating
+                movie.average_rating = total
+                movie.save()
+
+            user_rating = Rating.objects.filter(user_profile=profile, movie=movie).first()
+            in_watchlist = profile.watch_list.filter(pk=movie.pk).exists()
+        except UserProfile.DoesNotExist:
+            pass
+
+    follow_list = Follow.objects.filter(follower_user_id=profile.pk)
+    follow_name_list = []
+    for follow in follow_list:
+        follow_name_list.append(follow.follows_user_id)
+
+    context = {
+        'movie': movie,
+        'ratings': ratings,
+        'profile': profile,
+        'user_rating': user_rating,
+        'in_watchlist': in_watchlist,
+        'follow_list': follow_name_list,
+    }
+    return render(request, 'movie_app/movie_detail.html', context)
+
+@login_required
+@require_POST
+def toggle_watchlist(request, movieID):
+    movie   = get_object_or_404(Movie, movieID__iexact=movieID)
+    profile = get_object_or_404(UserProfile, user=get_object_or_404(User, id=request.POST.get("profile")))
+
+    if profile.watch_list.filter(pk=movie.pk).exists():
+        profile.watch_list.remove(movie)
+    else:
+        profile.watch_list.add(movie)
+    return JsonResponse({'success': True})
+
+@login_required
+@require_POST
+def toggle_follow(request, user_slug):
+    target_user    = get_object_or_404(User, username=user_slug)
+    target_profile = get_object_or_404(UserProfile, user=target_user)
+    my_profile     = get_object_or_404(UserProfile, user__id=request.POST.get("profile"))
+
+    if target_user != request.user:
+        if Follow.objects.filter(follower_user=my_profile, follows_user=target_profile).exists():
+            Follow.objects.get(follower_user=my_profile, follows_user=target_profile).delete()
+        else:
+            Follow.objects.create(follower_user=my_profile, follows_user=target_profile)
+    return JsonResponse({'success':True})
+
+@login_required
+@require_POST
+def save_bio(request):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    bio = request.POST.get('biography', '').strip()
+    if len(bio) > 500:
+        return JsonResponse({'success': False, 'error': 'Bio must be 500 characters or fewer.'}, status=400)
+    profile.biography = bio
+    profile.save()
+    return JsonResponse({'success': True, 'biography': profile.biography})
+
+@login_required
+@require_POST
+def edit_review(request, rating_id):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    rating_obj = get_object_or_404(Rating, id=rating_id, user_profile=profile)
+
+    review = request.POST.get('review', '').strip()
+    rating_value = request.POST.get('rating', '').strip()
+
+    try:
+        numeric_rating = float(rating_value)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Please choose a valid rating.'}, status=400)
+
+    if numeric_rating < 0 or numeric_rating > 5:
+        return JsonResponse({'error': 'Rating must be between 0 and 5.'}, status=400)
+
+    rating_obj.rating = numeric_rating
+    rating_obj.review = review
+    rating_obj.save()
+
+    return JsonResponse({
+        'success': True,
+        'rating_id': rating_obj.id,
+        'rating': rating_obj.rating,
+        'review': rating_obj.review,
+    })
