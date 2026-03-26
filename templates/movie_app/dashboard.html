@@ -38,10 +38,12 @@
             </div>
             {% endfor %}
 
+            <a href="{% url 'movie_app:all_movies' %}" class="link-underline link-underline-opacity-0">
             <div class="card rounded-0 flex-shrink-0 d-flex flex-column align-items-center justify-content-center" style="width: 160px; border: 2px dashed #adb5bd; background-color: transparent; cursor: pointer;">
                 <i class="bi bi-plus-lg text-secondary mb-2" style="font-size: 2rem;"></i>
                 <span class="text-secondary fw-bold">Add movie</span>
             </div>
+            </a>
         </div>
     </div>
 
