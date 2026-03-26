@@ -13,6 +13,7 @@ A Django web application for discovering and reviewing movies. Users can browse 
 
 ## Tech Stack
 
+- **Programming Language:** Python 3.14.11
 - **Backend:** Django 2.2.28
 - **Database:** SQLite3
 - **Image handling:** Pillow
@@ -46,7 +47,7 @@ python manage.py migrate
 
 Populate the database with movies
 
-> Download the TMDB movie dataset CSV and place it in the project root as `TMDB_movie_dataset.csv`, then run:
+> Download the TMDB_movie_sub_dataset CSV and place it in the project root as `TMDB_movie_dataset.csv`, then run:
 
 ```bash
 python population_script.py
