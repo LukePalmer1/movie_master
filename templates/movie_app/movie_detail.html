@@ -21,7 +21,7 @@
 
                     {% csrf_token %}
                     <button id = "{{ movie.movieID }}" type="submit" class= "watchlistButton btn w-100 rounded-0 {% if in_watchlist %}btn-danger{% else %}btn-outline-secondary{% endif %}">
-                        {% if in_watchlist %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}
+                        {% if in_watchlist %}Remove From Watchlist{% else %}Add To Watchlist{% endif %}
                     </button>
                 </div>
             </div>
