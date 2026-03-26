@@ -174,7 +174,7 @@ def movie_detail(request, movieID):
                     movie.no_of_ratings += 1
                 for cur_rating in movie_ratings:
                     total += cur_rating.rating
-                movie.average_rating = total
+                movie.average_rating = total / movie.no_of_ratings if movie.no_of_ratings > 0 else 0
                 movie.save()
 
             user_rating = Rating.objects.filter(user_profile=profile, movie=movie).first()
