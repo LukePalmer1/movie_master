@@ -174,7 +174,7 @@ def movie_detail(request, movieID):
                     movie.no_of_ratings += 1
                 for cur_rating in movie_ratings:
                     total += cur_rating.rating
-                movie.average_rating = total
+                movie.average_rating = round(total / movie.no_of_ratings if movie.no_of_ratings > 0 else 0, 2)
                 movie.save()
 
             user_rating = Rating.objects.filter(user_profile=profile, movie=movie).first()
@@ -250,6 +250,10 @@ def edit_review(request, rating_id):
 
     if numeric_rating < 0 or numeric_rating > 5:
         return JsonResponse({'error': 'Rating must be between 0 and 5.'}, status=400)
+
+    movie = get_object_or_404(Movie, movieID=rating_obj.movie.movieID)
+    movie.average_rating = round((movie.no_of_ratings * movie.average_rating - rating_obj.rating + numeric_rating)/movie.no_of_ratings, 2)
+    movie.save()
 
     rating_obj.rating = numeric_rating
     rating_obj.review = review
