@@ -4,7 +4,7 @@ A Django web application for discovering and reviewing movies. Users can browse 
 
 ## Features
 
-- Browse and search a catalogue of 10,000+ movies
+- Browse and search a catalogue of 30,000+ movies
 - Rate and review movies
 - Personal watchlist management
 - User profiles with biography
