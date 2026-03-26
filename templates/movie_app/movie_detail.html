@@ -49,9 +49,7 @@
 
                     <div class="mb-4">
                         <label class="fw-bold mb-2">Your Review:</label>
-                        <textarea class="form-control rounded-0" rows="12" placeholder="Write your review here..." style="resize: none; border: var(--wireframe-border);" name = "review">
-                            {% if user_rating %}{{ user_rating.review }}{% endif %}
-                        </textarea>
+                        <textarea class="form-control rounded-0" rows="12" placeholder="Write your review here..." style="resize: none; border: var(--wireframe-border);" name = "review">{% if user_rating %}{{ user_rating.review }}{% endif %}</textarea>
                     </div>
 
                     <div class="d-flex justify-content-end">
