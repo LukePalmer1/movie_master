@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'f@=#q(rxw0_(z%4&&-eondaf%rh-k1bxug2(4ms6g1f4d%0s$('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['rangodemo2020.pythonanywhere.com', "127.0.0.1"]
 
 
 # Application definition
