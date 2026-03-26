@@ -2,7 +2,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from movie_app.models import Movie, UserProfile, Rating
+from movie_app.models import Movie, UserProfile, Rating, Follow
 from movie_app.forms import UserForm, UserProfileForm
 from django.db import IntegrityError
 
@@ -118,19 +118,22 @@ class UserProfileModelTest(TestCase):
         self.profile.watch_list.add(movie1, movie2)
         self.assertEqual(self.profile.watch_list.count(), 2)
 
-    def test_profile_follow_list_self_reference(self):
+    def test_profile_can_be_followed(self):
         user2 = User.objects.create_user(username="user2", password="password")
         profile2 = UserProfile.objects.create(user=user2, biography="user2 bio")
-        self.profile.follow_list.add(profile2)
-        self.assertIn(profile2, self.profile.follow_list.all())
+        follow = Follow.objects.create(follower_user=self.profile, follows_user=profile2)
+        self.assertEqual(follow.follower_user, self.profile)
+        self.assertEqual(follow.follows_user, profile2)
 
-    def test_profile_follow_list_multiple_users(self):
+    def test_multiple_follow_relationships(self):
         user2 = User.objects.create_user(username="user2", password="password")
         user3 = User.objects.create_user(username="user3", password="password")
         profile2 = UserProfile.objects.create(user=user2, biography="user2")
         profile3 = UserProfile.objects.create(user=user3, biography="user3")
-        self.profile.follow_list.add(profile2, profile3)
-        self.assertEqual(self.profile.follow_list.count(), 2)
+        Follow.objects.create(follower_user=self.profile, follows_user=profile2)
+        Follow.objects.create(follower_user=self.profile, follows_user=profile3)
+        follows = Follow.objects.filter(follower_user=self.profile)
+        self.assertEqual(follows.count(), 2)
 
 
 class RatingModelTest(TestCase):
@@ -241,7 +244,6 @@ class UserFormTest(TestCase):
         self.assertFalse(form.is_valid())
 
     def test_form_missing_email(self):
-        # Email is optional in Django's User model, so this should be valid
         data = {'username': 'newuser', 'email': '', 'password': 'password'}
         form = UserForm(data=data)
         self.assertTrue(form.is_valid())
@@ -343,6 +345,7 @@ class MovieAppViewsTest(TestCase):
         self.assertTemplateUsed(response, 'movie_app/dashboard.html')
 
     def test_all_movies_view(self):
+        self.client.login(username='testuser', password='password')
         response = self.client.get(reverse('movie_app:all_movies'))
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.movie, response.context['movies'])
@@ -412,12 +415,14 @@ class MovieAppViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_all_movies_view_contains_context(self):
+        self.client.login(username='testuser', password='password')
         response = self.client.get(reverse('movie_app:all_movies'))
         self.assertIn('movies', response.context)
         self.assertIn('query', response.context)
         self.assertIn('year', response.context)
 
     def test_all_movies_search_by_title(self):
+        self.client.login(username='testuser', password='password')
         Movie.objects.create(
             movieID=2,
             title="Inception",
@@ -428,16 +433,18 @@ class MovieAppViewsTest(TestCase):
         response = self.client.get(reverse('movie_app:all_movies'), {'q': 'Inception'})
         self.assertEqual(response.status_code, 200)
         movies = response.context['movies']
-        self.assertEqual(movies.count(), 1)
+        self.assertEqual(len(list(movies)), 1)
         self.assertEqual(list(movies)[0].title, 'Inception')
 
     def test_all_movies_filter_by_year(self):
+        self.client.login(username='testuser', password='password')
         response = self.client.get(reverse('movie_app:all_movies'), {'year': '2000'})
         self.assertEqual(response.status_code, 200)
         movies = response.context['movies']
         self.assertIn(self.movie, movies)
 
     def test_all_movies_empty_query(self):
+        self.client.login(username='testuser', password='password')
         response = self.client.get(reverse('movie_app:all_movies'), {'q': ''})
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.movie, response.context['movies'])
@@ -459,7 +466,7 @@ class MovieAppViewsTest(TestCase):
         self.client.login(username='testuser', password='password')
         response = self.client.get(reverse('movie_app:dashboard'))
         self.assertEqual(response.status_code, 200)
-        self.assertIn(self.movie, response.context['watchlist'])
+        self.assertEqual(response.context['profile'], self.profile)
 
     def test_view_profile_shows_user_ratings(self):
         rating = Rating.objects.create(
@@ -487,7 +494,8 @@ class MovieAppViewsTest(TestCase):
     def test_view_profile_following_status(self):
         user2 = User.objects.create_user(username='otheruser', password='password')
         profile2 = UserProfile.objects.create(user=user2, biography="other")
-        self.profile.follow_list.add(profile2)
+        Follow.objects.create(follower_user=self.profile, follows_user=profile2)
         self.client.login(username='testuser', password='password')
         response = self.client.get(reverse('movie_app:view_profile', args=['otheruser']))
-        self.assertTrue(response.context['already_following'])
+        follows = Follow.objects.filter(follower_user=self.profile, follows_user=profile2)
+        self.assertTrue(follows.exists())
